@@ -298,7 +298,7 @@ const stockLevelData = activeInventoryItems.map(item => ({
         )}
 
         {/* Enhanced Analytics Cards */}
-        <Grid container spacing={3} sx={{ mb: 4, mt: 0 }}>
+        <Grid container spacing={2} sx={{ mb: 4, mt: 3 }}>
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ 
               p: 3, 
@@ -309,7 +309,7 @@ const stockLevelData = activeInventoryItems.map(item => ({
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" width={205} spacing={2}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <InventoryIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -333,7 +333,7 @@ const stockLevelData = activeInventoryItems.map(item => ({
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" width={205} spacing={2}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <TrendingUpIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -357,7 +357,7 @@ const stockLevelData = activeInventoryItems.map(item => ({
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" width={205} spacing={2}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <WarningIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -381,7 +381,7 @@ const stockLevelData = activeInventoryItems.map(item => ({
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" width={205} spacing={2}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <TrendingDownIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -401,13 +401,13 @@ const stockLevelData = activeInventoryItems.map(item => ({
         <Box sx={{ display: 'flex', gap: 4, mb: 4 }}>
           {/* Inventory Distribution Chart */}
           <Box sx={{ flex: '1' }}>
-            <Card sx={{ p: 3, borderRadius: 3, boxShadow: theme.shadows[4], height: 400 }}>
+            <Card  sx={{ p: 3, borderRadius: 3, boxShadow: theme.shadows[4], height: 400 }}>
               <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, display: 'flex', alignItems: 'center' }}>
                 <CategoryIcon sx={{ mr: 2, color: '#1976d2' }} />
                 Inventory Distribution by Category
               </Typography>
-              <Box sx={{ width: '100%', height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
+              <Box sx={{ width: '96%', height: 300 }}>
+                <ResponsiveContainer width="100%" height="96%">
                   <PieChart>
                     <Pie
                       data={pieData}
@@ -416,8 +416,8 @@ const stockLevelData = activeInventoryItems.map(item => ({
                       cx="50%"
                       cy="50%"
                       innerRadius={60}
-                      outerRadius={120}
-                      paddingAngle={5}
+                      outerRadius={100}
+                      paddingAngle={1}
                       label={({ name, value }) => `${name}: ${value}`}
                     >
                       {pieData.map((entry, idx) => (
@@ -470,7 +470,7 @@ const stockLevelData = activeInventoryItems.map(item => ({
         </Box>
 
         {/* Enhanced Add Inventory Form */}
-        <Paper elevation={6} sx={{ p: 4, mb: 4, borderRadius: 3, background: isDark ? 'linear-gradient(135deg, rgba(25,118,210,0.1) 0%, rgba(25,118,210,0.05) 100%)' : 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)' }}>
+        <Paper elevation={6} sx={{ p: 4, mb: 4, borderRadius: 3, background: isDark ? 'linear-gradient(135deg, rgba(248, 250, 252, 0.1) 0%, rgba(205, 226, 248, 0.05) 100%)' : 'linear-gradient(135deg, #f6f6f7ff 0%, #f2f8fdff 100%)' }}>
           <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
             <Avatar sx={{ bgcolor: '#1976d2', width: 48, height: 48 }}>📦</Avatar>
             <Typography variant="h5" fontWeight="bold">Add Inventory Item</Typography>
@@ -500,7 +500,7 @@ const stockLevelData = activeInventoryItems.map(item => ({
                 <TextField
                   fullWidth label="Category" name="category" value={form.category}
                   onChange={handleChange} required select
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 },width: '120px' }}
                 >
                   {CATEGORIES.map((cat, idx) => (
                     <MenuItem value={cat} key={idx}>{cat}</MenuItem>
@@ -520,7 +520,7 @@ const stockLevelData = activeInventoryItems.map(item => ({
                 <TextField
                   fullWidth label="Unit" name="unit" value={form.unit}
                   onChange={handleChange} required select
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 },width: '80px' }}
                 >
                   {UNITS.map((unit, idx) => (
                     <MenuItem value={unit} key={idx}>{unit}</MenuItem>
@@ -549,7 +549,7 @@ const stockLevelData = activeInventoryItems.map(item => ({
                 <TextField
                   fullWidth label="Supplier" name="supplier" value={form.supplier}
                   onChange={handleChange} required select
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 },width: '110px' }}
                 >
                   {SUPPLIERS.map((supplier, idx) => (
                     <MenuItem value={supplier} key={idx}>{supplier}</MenuItem>
@@ -560,7 +560,7 @@ const stockLevelData = activeInventoryItems.map(item => ({
                 <TextField
                   fullWidth label="Storage Location" name="location" value={form.location}
                   onChange={handleChange} required select
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, width: '170px' } }
                 >
                   {LOCATIONS.map((location, idx) => (
                     <MenuItem value={location} key={idx}>{location}</MenuItem>
@@ -702,8 +702,8 @@ const stockLevelData = activeInventoryItems.map(item => ({
           <DialogTitle sx={{ bgcolor: isDark ? 'rgba(25,118,210,0.1)' : '#e3f2fd', display: 'flex', alignItems: 'center' }}>
             <Avatar sx={{ bgcolor: '#1976d2', mr: 2 }}>✏️</Avatar>Edit Inventory Item
           </DialogTitle>
-          <DialogContent sx={{ pt: 3 }}>
-            <Grid container spacing={2}>
+          <DialogContent  sx={{ pt: 6 }}>
+            <Grid container spacing={2} sx={{ mt: 2 }}>
               <Grid item xs={12} md={6}>
                 <TextField 
                   fullWidth label="Item Code" name="code" value={editForm.code} 

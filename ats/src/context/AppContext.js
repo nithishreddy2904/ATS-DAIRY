@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { farmersAPI, suppliersAPI, milkEntriesAPI, fleetManagementAPI, deliveriesAPI, processingUnitsAPI, productionBatchesAPI, qualityControlAPI, maintenanceAPI, retailersAPI, salesAPI, inventoryAPI, employeeAPI, paymentsAPI, billsAPI, labQualityTestsAPI, reviewsAPI, farmerFeedbackAPI, messagesAPI, announcementsAPI, groupMessagesAPI,
-complianceRecordsAPI, certificationsAPI} from '../services/api';
+complianceRecordsAPI, certificationsAPI, auditsAPI, documentsAPI} from '../services/api';
 
 const AppContext = createContext();
 
@@ -63,6 +63,10 @@ export const AppProvider = ({ children }) => {
   const [certificationsFromDB, setCertificationsFromDB] = useState([]);
   const [complianceRecordsLoading, setComplianceRecordsLoading] = useState(false);
   const [certificationsLoading, setCertificationsLoading] = useState(false);
+  const [auditsFromDB, setAuditsFromDB] = useState([]);
+  const [auditsLoading, setAuditsLoading] = useState(false);
+  const [documentsFromDB, setDocumentsFromDB] = useState([]);
+  const [documentsLoading, setDocumentsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -336,18 +340,26 @@ const [employees, setEmployees] = useState([
     loadGroupMessagesFromDatabase();
     loadComplianceRecordsFromDatabase();
     loadCertificationsFromDatabase();
+    loadAuditsFromDatabase();
+    loadDocumentsFromDatabase();
   }, []);
 
-    const generateQualityDistribution = useMemo(() => {
+   // In AppContext.js - Update the generateQualityDistribution calculation
+const generateQualityDistribution = useMemo(() => {
+  console.log('🔍 Generating quality distribution from labQualityTests:', labQualityTests.length);
+  
   const qualityCount = { 'A+': 0, 'A': 0, 'B': 0, 'C': 0 };
   
   labQualityTests.forEach(test => {
+    console.log('Processing test:', test.id, 'Grade:', test.overall_grade);
     if (test.overall_grade) {
       qualityCount[test.overall_grade] = (qualityCount[test.overall_grade] || 0) + 1;
     }
   });
 
   const total = Object.values(qualityCount).reduce((sum, count) => sum + count, 0);
+  console.log('📊 Quality count breakdown:', qualityCount, 'Total:', total);
+  
   if (total === 0) {
     return [
       { name: 'No Data', value: 100, color: '#9e9e9e' }
@@ -360,7 +372,8 @@ const [employees, setEmployees] = useState([
     { name: 'Average (B)', value: Math.round((qualityCount['B'] / total) * 100), color: '#ff9800' },
     { name: 'Poor (C)', value: Math.round((qualityCount['C'] / total) * 100), color: '#f44336' },
   ].filter(item => item.value > 0);
-}, [labQualityTests]);
+}, [labQualityTests]); // ✅ Ensure dependency is labQualityTests
+
 
 
   const loadFarmersFromDatabase = async () => {
@@ -2164,6 +2177,8 @@ const addReview = async (reviewData) => {
 const updateReview = async (index, reviewData) => {
   try {
     const reviewId = reviews[index].id;
+    
+    // Complete backend mapping with ALL fields
     const dbReview = {
       customer_name: reviewData.customerName,
       customer_email: reviewData.customerEmail,
@@ -2173,10 +2188,14 @@ const updateReview = async (index, reviewData) => {
       comment: reviewData.comment,
       date: reviewData.date,
       status: reviewData.status,
-      response: reviewData.response,
-      response_date: reviewData.responseDate
+      response: reviewData.response || null,
+      response_date: reviewData.responseDate || null
     };
+
+    console.log('Updating review with data:', dbReview);
+
     const response = await reviewsAPI.update(reviewId, dbReview);
+    
     if (response && response.success) {
       const updatedReview = {
         id: response.data.id,
@@ -2191,19 +2210,26 @@ const updateReview = async (index, reviewData) => {
         response: response.data.response,
         responseDate: response.data.response_date
       };
+
       setReviews(prev => {
         const updated = [...prev];
         updated[index] = updatedReview;
         return updated;
       });
+
+      console.log('Review updated successfully in state');
       return response;
     }
   } catch (error) {
+    console.error('Error in updateReview:', error);
+    
+    // Fallback: update local state even if API fails
     setReviews(prev => {
       const updated = [...prev];
       updated[index] = reviewData;
       return updated;
     });
+    
     throw error;
   }
 };
@@ -2826,7 +2852,235 @@ const deleteCertification = async (certId) => {
     throw error;
   }
 };
+const loadAuditsFromDatabase = async () => {
+    setAuditsLoading(true);
+    try {
+        console.log('🔄 Loading audits from database...');
+        const response = await auditsAPI.getAll();
+        console.log('📋 Audits response:', response);
+        if (response && response.success && Array.isArray(response.data)) {
+            // MAP BACKEND FIELDS TO FRONTEND EXPECTED FIELDS
+            const formattedAudits = response.data.map(audit => ({
+                id: audit.id,
+                auditType: audit.audit_type,           
+                auditor: audit.auditor,
+                auditFirm: audit.audit_firm,           
+                scheduledDate: audit.scheduled_date,   
+                completedDate: audit.completed_date,   
+                duration: audit.duration,
+                status: audit.status,
+                findings: audit.findings,
+                correctiveActions: audit.corrective_actions,  
+                score: audit.score,
+                auditScope: audit.audit_scope,         
+                auditCriteria: audit.audit_criteria,   
+                nonConformities: audit.non_conformities,  
+                recommendations: audit.recommendations,
+                followUpDate: audit.follow_up_date,    
+                cost: audit.cost,
+                reportPath: audit.report_path          
+            }));
+            setAuditsFromDB(formattedAudits);
+            setAudits(formattedAudits); 
+        } else {
+            setAuditsFromDB([]);
+        }
+    } catch (error) {
+        console.error('❌ Error loading audits:', error);
+        setAuditsFromDB([]);
+    } finally {
+        setAuditsLoading(false);
+    }
+};
 
+const addAuditToDB = async (auditData) => {
+    try {
+        console.log('➕ Adding audit:', auditData);
+        const dbAuditData = {
+            id: auditData.id,
+            audit_type: auditData.auditType,
+            auditor: auditData.auditor,
+            audit_firm: auditData.auditFirm,
+            scheduled_date: auditData.scheduledDate,
+            completed_date: auditData.completedDate || null,
+            duration: auditData.duration ? parseInt(auditData.duration) : null,
+            status: auditData.status,
+            findings: auditData.findings,
+            corrective_actions: auditData.correctiveActions,
+            score: auditData.score ? parseInt(auditData.score) : null,
+            audit_scope: auditData.auditScope,
+            audit_criteria: auditData.auditCriteria,
+            non_conformities: auditData.nonConformities,
+            recommendations: auditData.recommendations,
+            follow_up_date: auditData.followUpDate || null,
+            cost: auditData.cost ? parseFloat(auditData.cost) : null,
+            report_path: auditData.reportPath
+        };
+
+        const response = await auditsAPI.create(dbAuditData);
+        if (response && response.success) {
+            await loadAuditsFromDatabase();
+        }
+    } catch (error) {
+        console.error('❌ Error adding audit:', error);
+        throw error;
+    }
+};
+
+const updateAuditInDB = async (auditId, auditData) => {
+    try {
+        console.log('✏️ Updating audit:', auditId, auditData);
+        const dbAuditData = {
+            audit_type: auditData.auditType,
+            auditor: auditData.auditor,
+            audit_firm: auditData.auditFirm,
+            scheduled_date: auditData.scheduledDate,
+            completed_date: auditData.completedDate || null,
+            duration: auditData.duration ? parseInt(auditData.duration) : null,
+            status: auditData.status,
+            findings: auditData.findings,
+            corrective_actions: auditData.correctiveActions,
+            score: auditData.score ? parseInt(auditData.score) : null,
+            audit_scope: auditData.auditScope,
+            audit_criteria: auditData.auditCriteria,
+            non_conformities: auditData.nonConformities,
+            recommendations: auditData.recommendations,
+            follow_up_date: auditData.followUpDate || null,
+            cost: auditData.cost ? parseFloat(auditData.cost) : null,
+            report_path: auditData.reportPath
+        };
+
+        const response = await auditsAPI.update(auditId, dbAuditData);
+        if (response && response.success) {
+            await loadAuditsFromDatabase();
+        }
+    } catch (error) {
+        console.error('❌ Error updating audit:', error);
+        throw error;
+    }
+};
+
+const deleteAuditFromDB = async (auditId) => {
+    try {
+        console.log('🗑️ Deleting audit:', auditId);
+        const response = await auditsAPI.delete(auditId);
+        if (response && response.success) {
+            await loadAuditsFromDatabase();
+        }
+    } catch (error) {
+        console.error('❌ Error deleting audit:', error);
+        throw error;
+    }
+};
+
+const loadDocumentsFromDatabase = async () => {
+    setDocumentsLoading(true);
+    try {
+        console.log('🔄 Loading documents from database...');
+        const response = await documentsAPI.getAll();
+        console.log('📋 Documents response:', response);
+        if (response && response.success && Array.isArray(response.data)) {
+            // MAP BACKEND FIELDS TO FRONTEND EXPECTED FIELDS
+            const formattedDocuments = response.data.map(doc => ({
+                id: doc.id,
+                name: doc.name,
+                type: doc.type,
+                category: doc.category,
+                uploadDate: doc.upload_date,           
+                expiryDate: doc.expiry_date,           
+                status: doc.status,
+                size: doc.size,
+                version: doc.version,
+                uploadedBy: doc.uploaded_by,           
+                reviewedBy: doc.reviewed_by,           
+                approvedBy: doc.approved_by,           
+                filePath: doc.file_path,               
+                description: doc.description
+            }));
+            setDocumentsFromDB(formattedDocuments);
+        } else {
+            setDocumentsFromDB([]);
+        }
+    } catch (error) {
+        console.error('❌ Error loading documents:', error);
+        setDocumentsFromDB([]);
+    } finally {
+        setDocumentsLoading(false);
+    }
+};
+
+
+const addDocumentToDB = async (documentData) => {
+    try {
+        console.log('➕ Adding document:', documentData);
+        const dbDocumentData = {
+            id: documentData.id,
+            name: documentData.name,
+            type: documentData.type,
+            category: documentData.category,
+            upload_date: documentData.uploadDate,
+            expiry_date: documentData.expiryDate || null,
+            status: documentData.status,
+            size: documentData.size,
+            version: documentData.version,
+            uploaded_by: documentData.uploadedBy,
+            reviewed_by: documentData.reviewedBy,
+            approved_by: documentData.approvedBy,
+            file_path: documentData.filePath,
+            description: documentData.description
+        };
+
+        const response = await documentsAPI.create(dbDocumentData);
+        if (response && response.success) {
+            await loadDocumentsFromDatabase();
+        }
+    } catch (error) {
+        console.error('❌ Error adding document:', error);
+        throw error;
+    }
+};
+
+const updateDocumentInDB = async (documentId, documentData) => {
+    try {
+        console.log('✏️ Updating document:', documentId, documentData);
+        const dbDocumentData = {
+            name: documentData.name,
+            type: documentData.type,
+            category: documentData.category,
+            upload_date: documentData.uploadDate,
+            expiry_date: documentData.expiryDate || null,
+            status: documentData.status,
+            size: documentData.size,
+            version: documentData.version,
+            uploaded_by: documentData.uploadedBy,
+            reviewed_by: documentData.reviewedBy,
+            approved_by: documentData.approvedBy,
+            file_path: documentData.filePath,
+            description: documentData.description
+        };
+
+        const response = await documentsAPI.update(documentId, dbDocumentData);
+        if (response && response.success) {
+            await loadDocumentsFromDatabase();
+        }
+    } catch (error) {
+        console.error('❌ Error updating document:', error);
+        throw error;
+    }
+};
+
+const deleteDocumentFromDB = async (documentId) => {
+    try {
+        console.log('🗑️ Deleting document:', documentId);
+        const response = await documentsAPI.delete(documentId);
+        if (response && response.success) {
+            await loadDocumentsFromDatabase();
+        }
+    } catch (error) {
+        console.error('❌ Error deleting document:', error);
+        throw error;
+    }
+};
 
 
   const value = {
@@ -3034,6 +3288,18 @@ const deleteCertification = async (certId) => {
     updateCertification,
     deleteCertification,
     // COMPLIANCE DATA
+    auditsFromDB,
+    auditsLoading,
+    documentsFromDB,
+    documentsLoading,
+    addAuditToDB,
+    updateAuditInDB,
+    deleteAuditFromDB,
+    addDocumentToDB,
+    updateDocumentInDB,
+    deleteDocumentFromDB,
+    loadAuditsFromDatabase,
+    loadDocumentsFromDatabase,
     complianceRecords,
     setComplianceRecords,
     certifications,

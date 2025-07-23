@@ -33,6 +33,22 @@ const PAYMENT_STATUS = ['Completed', 'Pending', 'Failed', 'Processing'];
 const BILL_STATUS = ['Paid', 'Unpaid', 'Overdue', 'Partially Paid'];
 const BILL_CATEGORIES = ['Milk Purchase', 'Equipment', 'Maintenance', 'Transport', 'Utilities', 'Other'];
 
+
+const formatDateTime = (timestamp) => {
+  if (!timestamp) return '';
+  
+  // Handle both ISO string and MySQL datetime formats
+  const date = new Date(timestamp);
+  
+  // Format as: Jun 09, 2025
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour12: false
+  }).split(',')[0]; // Remove time part, only show date
+};
+
 const Payments = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
@@ -97,8 +113,6 @@ const Payments = () => {
     }
     setPaymentForm({ ...paymentForm, [name]: value });
   };
-
-  const handlePaymentRadio = (e) => setPaymentForm({ ...paymentForm, paymentMode: e.target.value });
 
   const handleAddPayment = async (e) => {
     e.preventDefault();
@@ -524,31 +538,23 @@ const Payments = () => {
                   </Grid>
 
                   <Grid item xs={12} >
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 2, color: '#555' }}>
-                      Payment Mode *
-                    </Typography>
-                    <RadioGroup
-                      row
-                      value={paymentForm.paymentMode}
-                      onChange={handlePaymentRadio}
-                      sx={{ gap: 3, mb: 3 }}
-                    >
-                      {PAYMENT_MODES.map(mode => (
-                        <FormControlLabel 
-                          key={mode} 
-                          value={mode} 
-                          control={<Radio color="primary" />} 
-                          label={mode}
-                          sx={{ 
-                            border: '1px solid #e0e0e0',
-                            borderRadius: 2,
-                            padding: '8px 16px',
-                            margin: 0,
-                            '&:hover': { backgroundColor: '#f5f5f5' }
-                          }}
-                        />
-                      ))}
-                    </RadioGroup>
+                    <TextField
+  select
+  label="Payment Mode"
+  name="paymentMode"
+  value={paymentForm.paymentMode}
+  onChange={handlePaymentChange}
+  fullWidth
+  required
+  sx={{ borderRadius: 2 }}
+>
+  {PAYMENT_MODES.map(mode => (
+    <MenuItem key={mode} value={mode}>
+      {mode}
+    </MenuItem>
+  ))}
+</TextField>
+
                   </Grid>
 
                   <Grid item xs={12} md={6}>
@@ -571,12 +577,12 @@ const Payments = () => {
                     <TextField
                       fullWidth
                       multiline
-                      rows={3}
+                      rows={1}
                       label="Remarks"
                       name="remarks"
                       value={paymentForm.remarks}
                       onChange={handlePaymentChange}
-                      placeholder="Enter payment remarks..."
+                      placeholder="Enter  remarks..."
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -646,7 +652,7 @@ const Payments = () => {
                             sx={{ borderRadius: 2 }}
                           />
                         </TableCell>
-                        <TableCell>{payment.paymentDate}</TableCell>
+                        <TableCell>{formatDateTime(payment.paymentDate)}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
                           ₹{payment.amount}
                         </TableCell>
@@ -732,7 +738,7 @@ const Payments = () => {
                 Edit Payment
               </DialogTitle>
               <DialogContent sx={{ p: 3 }}>
-                <Grid container spacing={2} sx={{ mt: 1 }}>
+                <Grid container spacing={2} sx={{ mt: 3 }}>
                   <Grid item xs={12} md={6}>
                     <TextField
                       select
@@ -790,16 +796,23 @@ const Payments = () => {
                     />
                   </Grid>
                   <Grid item xs={12}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>Payment Mode</Typography>
-                    <RadioGroup
-                      row
-                      value={editPaymentForm.paymentMode}
-                      onChange={handleEditPaymentRadio}
-                    >
-                      {PAYMENT_MODES.map(mode => (
-                        <FormControlLabel key={mode} value={mode} control={<Radio />} label={mode} />
-                      ))}
-                    </RadioGroup>
+                    <TextField
+  select
+  label="Payment Mode"
+  name="paymentMode"
+  value={editPaymentForm.paymentMode}
+  onChange={handleEditPaymentChange}
+  fullWidth
+  required
+  sx={{ borderRadius: 2 }}
+>
+  {PAYMENT_MODES.map(mode => (
+    <MenuItem key={mode} value={mode}>
+      {mode}
+    </MenuItem>
+  ))}
+</TextField>
+
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <TextField
@@ -820,7 +833,7 @@ const Payments = () => {
                     <TextField
                       fullWidth
                       multiline
-                      rows={3}
+                      rows={1}
                       label="Remarks"
                       name="remarks"
                       value={editPaymentForm.remarks}
@@ -981,7 +994,7 @@ const Payments = () => {
                     <TextField
                       fullWidth
                       multiline
-                      rows={3}
+                      rows={1}
                       label="Description"
                       name="description"
                       value={billForm.description}
@@ -1047,7 +1060,7 @@ const Payments = () => {
                         </TableCell>
                         <TableCell>{bill.farmerId}</TableCell>
                         <TableCell sx={{ fontWeight: 'bold', color: '#2e7d32' }}>₹{bill.amount}</TableCell>
-                        <TableCell>{bill.dueDate}</TableCell>
+                        <TableCell>{formatDateTime(bill.dueDate)}</TableCell>
                         <TableCell>
                           <Chip label={bill.category} color="secondary" sx={{ borderRadius: 2 }} />
                         </TableCell>

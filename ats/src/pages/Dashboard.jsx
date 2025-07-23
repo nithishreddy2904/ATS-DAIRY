@@ -234,7 +234,7 @@ const generateRevenueDataFromSales = (sales, period) => {
 const MetricTile = ({ title, value, change, icon, color, subtitle, onClick, isClickable = false }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
-  const { milkEntries, sales } = useAppContext();
+  const { milkEntries, salesFromDB, salesLoading } = useAppContext();
   return (
     <Paper
       elevation={3}
@@ -349,8 +349,10 @@ const Dashboard = () => {
     suppliers, 
     milkEntries, 
     inventoryItems, 
-    sales,
+    salesFromDB,           
+    salesLoading,
     qualityTests,
+    labQualityTests,
     generateQualityDistribution,
     generateNetworkGrowthData,
     calculateSustainabilityIndex
@@ -360,7 +362,7 @@ const Dashboard = () => {
 
   // Filter data based on selected time period
   const filteredMilkEntries = useMemo(() => filterDataByPeriod(milkEntries, tabIndex), [milkEntries, tabIndex]);
-  const filteredSales = useMemo(() => filterDataByPeriod(sales, tabIndex), [sales, tabIndex]);
+  const filteredSales = useMemo(() => filterDataByPeriod(salesFromDB, tabIndex), [salesFromDB, tabIndex]);
 
   // Calculate real-time metrics from filtered data
   const totalMilkCollection = filteredMilkEntries.reduce((sum, entry) => sum + parseFloat(entry.quantity || 0), 0);
@@ -381,14 +383,19 @@ const Dashboard = () => {
   const sustainabilityIndex = calculateSustainabilityIndex;
 
   // Generate quality distribution from Quality Tests
-  const qualityDistribution = useMemo(() => generateQualityDistribution, [generateQualityDistribution]);
+  const qualityDistribution = useMemo(() => {
+  const distribution = generateQualityDistribution;
+  console.log('📈 Dashboard quality distribution:', distribution);
+  console.log('📋 Backend labQualityTests count:', labQualityTests?.length || 0);
+  return distribution;
+}, [generateQualityDistribution, labQualityTests]);
 
   // MODIFIED: Generate network growth data from actual farmers and suppliers
   const networkGrowthData = useMemo(() => generateNetworkGrowthData, [generateNetworkGrowthData]);
 
   // Generate all chart data from AppContext data
   const productionData = useMemo(() => generateProductionDataFromMilkEntries(tabIndex, milkEntries), [tabIndex, milkEntries]);
-  const dynamicRevenueData = useMemo(() => generateRevenueDataFromSales(sales, tabIndex), [sales, tabIndex]);
+  const dynamicRevenueData = useMemo(() => generateRevenueDataFromSales(salesFromDB, tabIndex), [salesFromDB, tabIndex]);
 
   // Quick Action Handlers
   const handleQuickAction = (action) => {
@@ -682,7 +689,7 @@ const Dashboard = () => {
                     Quality Distribution
                   </Typography>
                   <Chip 
-                    label={`${qualityTests.length} Tests`} 
+                    label={`${labQualityTests.length} Tests`} 
                     size="small" 
                     variant="outlined" 
                     color="success" 
@@ -740,7 +747,7 @@ const Dashboard = () => {
           {/* Financial Overview Panel - DATA FROM SALES */}
           <Box sx={{ flex: '1' }}>
             <Paper elevation={0} sx={{
-              height: 280,
+              height: 284,
               borderRadius: 2,
               borderTop: '4px solid #ff9800',
               border: isDark ? '1px solid #333' : '1px solid #e0e0e0',
@@ -752,7 +759,7 @@ const Dashboard = () => {
                     Financial Overview ({periodLabels[tabIndex]})
                   </Typography>
                   <Chip 
-                    label={`${sales.length} Total Sales`} 
+                    label={`${salesFromDB.length} Total Sales`} 
                     size="small" 
                     variant="outlined" 
                     color="success" 
@@ -774,7 +781,7 @@ const Dashboard = () => {
                     />
                     <Legend />
                     <Bar dataKey="revenue" fill="#4caf50" name="Revenue (₹)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="expenses" fill="#f44336" name="Expenses (₹)" radius={[4, 4, 0, 0]} />
+                    {/* <Bar dataKey="expenses" fill="#f44336" name="Expenses (₹)" radius={[4, 4, 0, 0]} /> */}
                   </BarChart>
                 </ResponsiveContainer>
               </Box>
@@ -971,7 +978,7 @@ const Dashboard = () => {
                   { action: `Revenue: ₹${(totalRevenue / 1000).toFixed(1)}K generated`, time: '30 minutes ago', type: 'success' },
                   { action: `${filteredSales.length} sales transactions recorded`, time: '1 hour ago', type: 'info' },
                   { action: `${filteredMilkEntries.length} milk collection entries`, time: '2 hours ago', type: 'info' },
-                  { action: `${qualityTests.length} quality tests completed`, time: '3 hours ago', type: 'success' },
+                  { action: `${labQualityTests.length} quality tests completed`, time: '3 hours ago', type: 'success' },
                   { action: `Network grew to ${farmers.length + suppliers.length} partners`, time: '4 hours ago', type: 'success' },
                 ].map((activity, idx) => (
                   <Stack key={idx} direction="row" alignItems="center" sx={{ py: 1 }}>

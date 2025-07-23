@@ -13,7 +13,9 @@ const reviewValidation = [
   body('subject').isLength({ min: 3, max: 200 }).withMessage('Subject must be 3-200 characters'),
   body('comment').isLength({ min: 5, max: 1000 }).withMessage('Comment must be 5-1000 characters'),
   body('date').isISO8601().withMessage('Invalid date format'),
-  body('status').isIn(['New', 'In Progress', 'Responded', 'Resolved', 'Escalated']).withMessage('Invalid status')
+  body('status').isIn(['New', 'In Progress', 'Responded', 'Resolved', 'Escalated']).withMessage('Invalid status'),
+  body('response').optional().isString(),
+  body('response_date').optional().isISO8601().withMessage('Invalid response date format'),
 ];
 
 // Routes

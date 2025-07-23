@@ -19,12 +19,38 @@ const VEHICLE_TYPES = ['Truck', 'Van', 'Bike', 'Refrigerated Truck'];
 const FUEL_TYPES = ['Diesel', 'Petrol', 'Electric', 'CNG'];
 const VEHICLE_STATUS = ['Available', 'In Transit', 'Maintenance', 'Out of Service'];
 const ROUTES = ['North Zone', 'South Zone', 'East Zone', 'West Zone', 'Central Zone'];
-const DELIVERY_STATUS = [ 'In Transit', 'Delivered', 'Pending', 'Cancelled'];
+const DELIVERY_STATUS = ['Scheduled', 'In Transit', 'Delivered', 'Pending', 'Cancelled'];
 const PRIORITY_LEVELS = ['High', 'Medium', 'Low'];
 
 const VEHICLE_NUMBER_REGEX = /^[A-Z]{2}[0-9]{2}[A-Z]{2}[0-9]{4}$/;
 const DRIVER_NAME_REGEX = /^[A-Za-z\s]+$/;
 const CAPACITY_REGEX = /^[0-9]+$/;
+const getStatusColor = (status) => {
+  const colorMap = {
+    'Delivered': '#4caf50',
+    'In Transit': '#2196f3', 
+    'Scheduled': '#ff9800',
+    'Pending': '#ffc107',
+    'Cancelled': '#f44336'
+  };
+  return colorMap[status] || '#9e9e9e';
+};
+
+const formatDateTime = (timestamp) => {
+  if (!timestamp) return '';
+  
+  // Handle both ISO string and MySQL datetime formats
+  const date = new Date(timestamp);
+  
+  // Format as: Jun 09, 2025
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour12: false
+  }).split(',')[0]; // Remove time part, only show date
+};
+
 
 const Logistics = () => {
   const theme = useTheme();
@@ -44,6 +70,20 @@ const Logistics = () => {
     deleteDelivery,
     loadDeliveriesFromDatabase
   } = useAppContext();
+
+  const safeStatusData = DELIVERY_STATUS.map(status => {
+  const count = Array.isArray(deliveries) ? 
+    deliveries.filter(d => d.status === status).length : 0;
+  return {
+    name: status,
+    value: count,
+    color: getStatusColor(status)
+  };
+});
+
+// Create single data source for both chart and legend
+const hasValidDeliveries = Array.isArray(deliveries) && deliveries.length > 0;
+const nonZeroStatusData = safeStatusData.filter(item => item.value > 0);
 
   // Fleet State
   const [vehicleForm, setVehicleForm] = useState({
@@ -327,14 +367,27 @@ const Logistics = () => {
     route: route.replace(' Zone', ''),
     deliveries: deliveries.filter(d => d.destination === route).length
   }));
-  const statusData = DELIVERY_STATUS.map(status => ({
+ const statusData = DELIVERY_STATUS.map(status => {
+  const count = Array.isArray(deliveries) ? 
+    deliveries.filter(d => d.status === status).length : 0;
+  return {
     name: status,
-    value: deliveries.filter(d => d.status === status).length,
-    color: status === 'Delivered' ? '#4caf50' :
-           status === 'In Transit' ? '#2196f3' :
-           status === 'Delayed' ? '#f44336' :
-           status === 'Cancelled' ? '#9e9e9e' : '#ff9800'
-  }));
+    value: count,
+    color: getStatusColor(status)
+  };
+});
+const hasDeliveries = Array.isArray(deliveries) && deliveries.length > 0;
+// const nonZeroStatusData = statusData.filter(item => item.value > 0);
+
+const chartDisplayData = nonZeroStatusData.length > 0 ? nonZeroStatusData : [
+  { name: 'No Data Available', value: 1, color: '#e0e0e0' }
+];
+
+// Add fallback data if no deliveries exist
+const chartData = statusData.length > 0 ? statusData : [
+  { name: 'No Data', value: 1, color: '#e0e0e0' }
+];
+
 
   return (
     <Box sx={{ p: { xs: 1, md: 4 } }}>
@@ -350,7 +403,8 @@ const Logistics = () => {
           alignItems: 'center',
           justifyContent: 'center',
           background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)',
-          minHeight: 160
+          minHeight: 160,
+          height: { xs: 100, md: 150 }
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -390,7 +444,8 @@ const Logistics = () => {
             bgcolor: '#e3f2fd', // Bright blue
             color: '#1976d2',
             boxShadow: 3,
-            minHeight: 110
+            minHeight: 110,
+            width: '230px'
           }}>
             <Avatar sx={{ bgcolor: '#1976d2', color: '#fff', width: 48, height: 48 }}>
               <TrendingUpIcon />
@@ -498,7 +553,7 @@ const Logistics = () => {
             </Box>
           </Paper>
         </Box>
-        <Box sx={{ flex: '1' }}>
+        {/* <Box sx={{ flex: '1' }}>
           <Paper elevation={4} sx={{
             p: 3,
             borderRadius: 3,
@@ -544,7 +599,80 @@ const Logistics = () => {
               </Stack>
             </Box>
           </Paper>
+        </Box> */}
+        <Box sx={{ flex: '1' }}>
+  <Paper elevation={4} sx={{
+    p: 3,
+    borderRadius: 3,
+    height: 350,
+    display: 'flex',
+    flexDirection: 'column'
+  }}>
+    <Typography variant="h6" fontWeight="bold" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+      <SpeedIcon sx={{ mr: 2, color: '#4caf50' }} />
+      Delivery Status
+    </Typography>
+    
+    {/* Proper loading state handling */}
+    {deliveriesLoading ? (
+      <Box sx={{ 
+        flexGrow: 1, 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        height: 200 
+      }}>
+        <Typography color="text.secondary">Loading delivery data...</Typography>
+      </Box>
+    ) : (
+      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ height: 200 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartDisplayData}  // ← Use consistent data source
+                cx="50%"
+                cy="50%"
+                innerRadius={40}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+              >
+                {chartDisplayData.map((entry, index) => (  // ← Same data source
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
         </Box>
+        
+        {/* Consistent legend using same data source */}
+        <Stack spacing={1} sx={{ mt: 2 }}>
+          {hasValidDeliveries ? (
+            chartDisplayData.map((item, idx) => (  // ← Same data source
+              <Stack key={idx} direction="row" alignItems="center" justifyContent="space-between">
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Box sx={{ width: 12, height: 12, bgcolor: item.color, borderRadius: 1 }} />
+                  <Typography variant="body2">{item.name}</Typography>
+                </Stack>
+                <Typography variant="body2" fontWeight="bold">{item.value}</Typography>
+              </Stack>
+            ))
+          ) : (
+            <Stack direction="row" alignItems="center" justifyContent="center" sx={{ py: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                No delivery data available
+              </Typography>
+            </Stack>
+          )}
+        </Stack>
+      </Box>
+    )}
+  </Paper>
+</Box>
+
+
       </Box>
 
       {/* Fleet Entry Form */}
@@ -584,7 +712,7 @@ const Logistics = () => {
                 onChange={handleVehicleChange}
                 required
                 select
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                sx={{ width: '140px', '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               >
                 {VEHICLE_TYPES.map((type, idx) => (
                   <MenuItem value={type} key={idx}>{type}</MenuItem>
@@ -787,7 +915,7 @@ const Logistics = () => {
           <Avatar sx={{ bgcolor: '#1976d2', mr: 2 }}>✏️</Avatar>Edit Vehicle
         </DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={2} sx={{ mt: 2 }}>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
@@ -953,6 +1081,7 @@ const Logistics = () => {
             </Grid>
             <Grid item xs={12} md={3}>
               <TextField
+              sx={{width: '110px'}}
                 fullWidth
                 label="Vehicle"
                 name="vehicle_id"
@@ -978,6 +1107,7 @@ const Logistics = () => {
             </Grid>
             <Grid item xs={12} md={3}>
               <TextField
+              sx={{width: '130px'}}
                 fullWidth
                 label="Destination"
                 name="destination"
@@ -1101,7 +1231,7 @@ const Logistics = () => {
             ) : (
               deliveries.map((delivery, idx) => (
                 <TableRow key={delivery.id}>
-                  <TableCell>{delivery.delivery_date}</TableCell>
+                  <TableCell>{formatDateTime(delivery.delivery_date)}</TableCell>
                   <TableCell>
                     {delivery.vehicle_id
                       ? (fleetManagement.find(f => f.id === delivery.vehicle_id)?.vehicleNumber || 'N/A')
@@ -1145,7 +1275,7 @@ const Logistics = () => {
       <Dialog open={editDeliveryId !== null} onClose={() => setEditDeliveryId(null)} maxWidth="md" fullWidth>
         <DialogTitle>Edit Delivery</DialogTitle>
         <DialogContent sx={{ pt: 3 }}>
-          <Grid container spacing={2}>
+          <Grid container spacing={2} sx={{ mt: 2 }}>
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth

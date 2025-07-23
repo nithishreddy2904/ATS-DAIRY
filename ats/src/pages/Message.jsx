@@ -17,6 +17,7 @@ import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import MarkEmailUnreadIcon from '@mui/icons-material/MarkEmailUnread';
 import { useTheme } from '@mui/material/styles';
 import { useAppContext } from '../context/AppContext';
+import { red } from '@mui/material/colors';
 // Validation regex patterns
 const FARMER_ID_REGEX = /^[A-Za-z]+[0-9]{4}$/;
 
@@ -24,6 +25,24 @@ const MESSAGE_STATUS = ['Sent', 'Delivered', 'Read', 'Failed'];
 const PRIORITY_LEVELS = ['High', 'Medium', 'Low'];
 const TARGET_AUDIENCE = ['All Farmers', 'Quality Team', 'Logistics Team', 'Management', 'Suppliers'];
 const ANNOUNCEMENT_STATUS = ['Draft', 'Published', 'Archived'];
+
+const formatDateTime = (timestamp) => {
+  if (!timestamp) return '';
+  
+  // Handle both ISO string and MySQL datetime formats
+  const date = new Date(timestamp);
+  
+  // Format as: Jun 09, 2025 2:30 PM
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  });
+};
+
 
 const Message = () => {
   const theme = useTheme();
@@ -81,10 +100,7 @@ const Message = () => {
   const [groupForm, setGroupForm] = useState({
     id: '', groupName: '', message: '', timestamp: '', senderName: '', memberCount: 0
   });
-  // const [groupMessages, setGroupMessages] = useState([
-  //   { id: 'GRP001', groupName: 'Quality Team', message: 'Weekly quality meeting scheduled for tomorrow.', timestamp: '2025-06-09 16:00', senderName: 'Quality Manager', memberCount: 12 },
-  //   { id: 'GRP002', groupName: 'Logistics Team', message: 'New delivery routes have been optimized.', timestamp: '2025-06-09 11:30', senderName: 'Logistics Head', memberCount: 8 }
-  // ]);
+  
 
   // Validation errors
   const [farmerIdError, setFarmerIdError] = useState('');
@@ -629,7 +645,7 @@ if (messagesError || groupMessagesError) {
                     <TextField
                       fullWidth label="Message" name="message" value={messageForm.message}
                       onChange={handleMessageChange} required
-                      multiline rows={4}
+                      multiline rows={1}
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -682,7 +698,7 @@ if (messagesError || groupMessagesError) {
                       <TableCell><Chip label={message.farmerId} color="primary" variant="outlined" /></TableCell>
                       <TableCell sx={{ maxWidth: 150 }}>{message.subject}</TableCell>
                       <TableCell sx={{ maxWidth: 200 }}>{message.message}</TableCell>
-                      <TableCell>{message.timestamp}</TableCell>
+                      <TableCell>{formatDateTime(message.timestamp)}</TableCell>
                       <TableCell>
                         <Chip 
                           label={message.priority} 
@@ -700,10 +716,10 @@ if (messagesError || groupMessagesError) {
                       <TableCell>
                         <Stack direction="row" spacing={1}>
                           <IconButton color="primary" onClick={() => handleEditMessage(idx)} sx={{ borderRadius: 2 }}>
-                            <EditIcon />
+                            <EditIcon sx={{color:'blue'}} />
                           </IconButton>
                           <IconButton color="error" onClick={() => handleDeleteMessage(idx)} sx={{ borderRadius: 2 }}>
-                            <DeleteIcon />
+                            <DeleteIcon sx={{color:'red'}}/>
                           </IconButton>
                         </Stack>
                       </TableCell>
@@ -773,7 +789,7 @@ if (messagesError || groupMessagesError) {
                     <TextField
                       fullWidth label="Content" name="content" value={announcementForm.content}
                       onChange={handleAnnouncementChange} required
-                      multiline rows={4}
+                      multiline rows={1}
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -852,14 +868,14 @@ if (messagesError || groupMessagesError) {
                         />
                       </TableCell>
                       <TableCell><Typography fontWeight="bold">{announcement.views}</Typography></TableCell>
-                      <TableCell>{announcement.publishDate}</TableCell>
+                      <TableCell>{formatDateTime(announcement.publishDate)}</TableCell>
                       <TableCell>
   <Stack direction="row" spacing={1}>
     <IconButton onClick={() => handleEditAnnouncement(idx)} sx={{ borderRadius: 2 }}>
-      <EditIcon />
+      <EditIcon sx={{color:'blue'}} />
     </IconButton>
     <IconButton onClick={() => handleDeleteAnnouncement(idx)} sx={{ borderRadius: 2 }}>
-      <DeleteIcon />
+      <DeleteIcon sx={{color:'red'}} />
     </IconButton>
   </Stack>
 </TableCell>
@@ -917,7 +933,7 @@ if (messagesError || groupMessagesError) {
                     <TextField
                       fullWidth label="Message" name="message" value={groupForm.message}
                       onChange={handleGroupChange} required
-                      multiline rows={4}
+                      multiline rows={1}
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -969,14 +985,14 @@ if (messagesError || groupMessagesError) {
                       <TableCell>{group.senderName}</TableCell>
                       <TableCell sx={{ maxWidth: 250 }}>{group.message}</TableCell>
                       <TableCell><Typography fontWeight="bold">{group.memberCount}</Typography></TableCell>
-                      <TableCell>{group.timestamp}</TableCell>
+                      <TableCell>{formatDateTime(group.timestamp)}</TableCell>
                       <TableCell>
   <Stack direction="row" spacing={1}>
     <IconButton onClick={() => handleEditGroupMessage(idx)} sx={{ borderRadius: 2 }}>
-      <EditIcon />
+      <EditIcon sx={{color:'blue'}} />
     </IconButton>
     <IconButton onClick={() => handleDeleteGroupMessage(idx)} sx={{ borderRadius: 2 }}>
-      <DeleteIcon />
+      <DeleteIcon sx={{color:'red'}}/>
     </IconButton>
   </Stack>
 </TableCell>
@@ -1032,7 +1048,7 @@ if (messagesError || groupMessagesError) {
                 <TextField
                   fullWidth label="Message" name="message" value={editMessageForm.message}
                   onChange={handleEditMessageChange} required
-                  multiline rows={4}
+                  multiline rows={1}
                 />
               </Grid>
             </Grid>
@@ -1116,7 +1132,7 @@ if (messagesError || groupMessagesError) {
         <TextField
           fullWidth
           multiline
-          rows={4}
+          rows={1}
           label="Content"
           name="content"
           value={editAnnouncementForm.content}
@@ -1175,7 +1191,7 @@ if (messagesError || groupMessagesError) {
         <TextField
           fullWidth
           multiline
-          rows={3}
+          rows={1}
           label="Message"
           name="message"
           value={editGroupForm.message}

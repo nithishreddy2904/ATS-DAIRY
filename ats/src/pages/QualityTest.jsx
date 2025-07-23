@@ -29,6 +29,22 @@ const TEST_STATUS = ['Pending', 'In Progress', 'Completed', 'Failed'];
 const QUALITY_GRADES = ['A+', 'A', 'B', 'C', 'D'];
 const ADULTERATION_TYPES = ['None Detected', 'Water', 'Starch', 'Urea', 'Detergent', 'Salt'];
 
+const formatDateTime = (timestamp) => {
+  if (!timestamp) return '';
+  
+  // Handle both ISO string and MySQL datetime formats
+  const date = new Date(timestamp);
+  
+  // Format as: Jun 09, 2025
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour12: false
+  }).split(',')[0]; // Remove time part, only show date
+};
+
+
 const QualityTest = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
@@ -40,7 +56,7 @@ const QualityTest = () => {
     loadLabQualityTestsFromDatabase,
     addLabQualityTest,
     updateLabQualityTest,
-    deleteLabQualityTest,
+    deleteLabQualityTest, 
     farmers,
     generateQualityDistribution,
     loading,
@@ -254,7 +270,8 @@ const QualityTest = () => {
     { month: 'Mar', tests: labQualityTests.filter(t => t.test_date?.includes('2025-03')).length },
     { month: 'Apr', tests: labQualityTests.filter(t => t.test_date?.includes('2025-04')).length },
     { month: 'May', tests: labQualityTests.filter(t => t.test_date?.includes('2025-05')).length },
-    { month: 'Jun', tests: labQualityTests.filter(t => t.test_date?.includes('2025-06')).length }
+    { month: 'Jun', tests: labQualityTests.filter(t => t.test_date?.includes('2025-06')).length },
+    { month: 'Jul', tests: labQualityTests.filter(t => t.test_date?.includes('2025-07')).length }
   ];
 
   // Show loading state
@@ -273,7 +290,7 @@ const QualityTest = () => {
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
       {/* Header */}
       <Box sx={{
-        borderRadius: 0, p: 3, mb: 2,
+        borderRadius: 0, p: 3, mb: 2,mt: 3,
         background: 'linear-gradient(135deg, #4caf50 0%, #8bc34a 100%)',
         color: '#fff', textAlign: 'center',
         position: 'relative', overflow: 'hidden',
@@ -313,7 +330,7 @@ const QualityTest = () => {
       )}
 
       {/* Statistics Cards */}
-      <Grid container spacing={3} sx={{ px: 3, mb: 4 }}>
+      <Grid container spacing={2} sx={{ px: 3, mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ 
             p: 3, 
@@ -324,7 +341,7 @@ const QualityTest = () => {
             transition: 'transform 0.3s ease',
             '&:hover': { transform: 'translateY(-4px)' }
           }}>
-            <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={2} width={205}>
               <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                 <ScienceIcon sx={{ fontSize: 28 }} />
               </Avatar>
@@ -348,7 +365,7 @@ const QualityTest = () => {
             transition: 'transform 0.3s ease',
             '&:hover': { transform: 'translateY(-4px)' }
           }}>
-            <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={2} width={205}>
               <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                 <VerifiedUserIcon sx={{ fontSize: 28 }} />
               </Avatar>
@@ -372,7 +389,7 @@ const QualityTest = () => {
             transition: 'transform 0.3s ease',
             '&:hover': { transform: 'translateY(-4px)' }
           }}>
-            <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={2} width={205}>
               <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                 <AssignmentIcon sx={{ fontSize: 28 }} />
               </Avatar>
@@ -396,7 +413,7 @@ const QualityTest = () => {
             transition: 'transform 0.3s ease',
             '&:hover': { transform: 'translateY(-4px)' }
           }}>
-            <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={2} width={205}>
               <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                 <TrendingUpIcon sx={{ fontSize: 28 }} />
               </Avatar>
@@ -434,7 +451,7 @@ const QualityTest = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <TextField select fullWidth label="Farmer" name="farmerId" value={testForm.farmerId} onChange={handleTestChange} required
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}>
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, width: '110px' }}>
                   {farmers.map(farmer => <MenuItem key={farmer.id} value={farmer.id}>{farmer.name} ({farmer.id})</MenuItem>)}
                 </TextField>
               </Grid>
@@ -496,7 +513,7 @@ const QualityTest = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField fullWidth label="Remarks" name="remarks" value={testForm.remarks} onChange={handleTestChange}
-                  multiline rows={3} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
+                  multiline rows={1} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
               </Grid>
               <Grid item xs={12}>
                 <Button type="submit" variant="contained" size="large" sx={{ borderRadius: 3, px: 4, py: 1.5 }}
@@ -535,7 +552,7 @@ const QualityTest = () => {
                   <TableCell>{test.batch_id}</TableCell>
                   <TableCell>{test.sample_id}</TableCell>
                   <TableCell>{getFarmerName(test.farmer_id)}</TableCell>
-                  <TableCell>{test.test_date}</TableCell>
+                  <TableCell>{formatDateTime(test.test_date)}</TableCell>
                   <TableCell>
                     <Chip 
                       label={test.overall_grade} 
@@ -584,7 +601,7 @@ const QualityTest = () => {
           <Grid item xs={12} md={6}>
             <Paper elevation={6} sx={{ p: 3, borderRadius: 3, height: 300 }}>
               <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Quality Distribution (Dashboard Link)</Typography>
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={240} width= {450}>
                 <PieChart>
                   <Pie
                     data={qualityDistribution}
@@ -607,7 +624,7 @@ const QualityTest = () => {
           <Grid item xs={12} md={6}>
             <Paper elevation={6} sx={{ p: 3, borderRadius: 3, height: 300 }}>
               <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Monthly Test Trends</Typography>
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={230} width= {490}>
                 <BarChart data={monthlyTestData}>
                   <XAxis dataKey="month" />
                   <YAxis />
@@ -625,7 +642,7 @@ const QualityTest = () => {
             <Avatar sx={{ bgcolor: '#4caf50', mr: 2 }}>✏️</Avatar>Edit Quality Test
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={2} sx={{ mt: 2 }}>
               <Grid item xs={12} md={6}>
                 <TextField fullWidth label="Batch ID" name="batchId" value={editTestForm.batchId} onChange={handleEditTestChange} required
                   error={!!batchIdError} helperText={batchIdError || "Format: BATCH0001"} />
@@ -691,7 +708,7 @@ const QualityTest = () => {
               </Grid>
               <Grid item xs={12}>
                 <TextField fullWidth label="Remarks" name="remarks" value={editTestForm.remarks} onChange={handleEditTestChange}
-                  multiline rows={3} />
+                  multiline rows={1} />
               </Grid>
             </Grid>
           </DialogContent>

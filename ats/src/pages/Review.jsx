@@ -34,6 +34,12 @@ const Review = () => {
   const isDark = theme.palette.mode === 'dark';
   const [tab, setTab] = useState(0);
 
+  const formatDate = (value) => {
+  if (!value) return '';
+  // Handles both "2025-07-01T00:00:00.000Z" and "2025-07-01"
+  return value.split('T')[0];
+};
+
   // Context: Backend-connected reviews state and CRUD
   const {
     reviews,
@@ -77,10 +83,13 @@ const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({
     id: '', farmerName: '', farmerId: '', feedbackType: '', rating: 0,
     message: '', date: '', priority: 'Medium', status: 'Open'
   });
-  const [feedback, setFeedback] = useState([
-    { id: 'FB001', farmerName: 'Ravi Patel', farmerId: 'FARM001', feedbackType: 'Suggestion', rating: 4, message: 'Please consider increasing the milk collection frequency during peak season.', date: '2025-06-08', priority: 'Medium', status: 'In Review' },
-    { id: 'FB002', farmerName: 'Lakshmi Devi', farmerId: 'FARM002', feedbackType: 'Complaint', rating: 2, message: 'Payment processing is taking longer than usual this month.', date: '2025-06-07', priority: 'High', status: 'Open' }
-  ]);
+ 
+
+  const [editFeedbackIdx, setEditFeedbackIdx] = useState(null);
+const [editFeedbackForm, setEditFeedbackForm] = useState({
+  id: '', farmerName: '', farmerId: '', feedbackType: '', rating: 0,
+  message: '', date: '', priority: 'Medium', status: 'Open'
+});
 
   // Response dialog state
   const [responseDialog, setResponseDialog] = useState({
@@ -180,11 +189,26 @@ const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({
   );
 };
 
-  const handleEditReview = (idx) => {
-    setEditReviewIdx(idx);
-    setEditReviewForm(reviews[idx]);
-    setNameError(''); setEmailError('');
-  };
+const handleEditReview = (idx) => {
+  setEditReviewIdx(idx);
+  const review = reviews[idx];
+  setEditReviewForm({
+    id: review.id || '',
+    customerName: review.customerName || '',
+    customerEmail: review.customerEmail || '',
+    category: review.category || '',
+    rating: review.rating || 0,
+    subject: review.subject || '',
+    comment: review.comment || '',
+    date: review.date || '',
+    status: review.status || 'New',
+    response: review.response || '',
+    responseDate: review.responseDate || ''
+  });
+  setNameError(''); 
+  setEmailError('');
+};
+
   const handleEditReviewChange = (e) => {
     const { name, value } = e.target;
     if (name === 'customerName') {
@@ -198,29 +222,52 @@ const [deleteConfirmDialog, setDeleteConfirmDialog] = useState({
     setEditReviewForm({ ...editReviewForm, [name]: value });
   };
   const handleSaveEditReview = async () => {
-    if (editReviewIdx !== null && !nameError && !emailError) {
-      await updateReview(editReviewIdx, editReviewForm);
+  if (editReviewIdx !== null && !nameError && !emailError) {
+    try {
+      // If response is added, update status and responseDate
+      const updatedReview = {
+        ...editReviewForm,
+        status: editReviewForm.response && !reviews[editReviewIdx].response ? 'Responded' : editReviewForm.status,
+        responseDate: editReviewForm.response && !reviews[editReviewIdx].response ? 
+          new Date().toISOString().split('T')[0] : editReviewForm.responseDate
+      };
+      
+      await updateReview(editReviewIdx, updatedReview);
       setEditReviewIdx(null);
+      console.log('Review updated successfully');
+    } catch (error) {
+      console.error('Error updating review:', error);
+      alert('Error updating review: ' + error.message);
     }
-  };
+  }
+};
+
 
   // Response handlers
   const handleOpenResponse = (reviewId) => {
     setResponseDialog({ open: true, reviewId, response: '' });
   };
-  const handleSaveResponse = async () => {
-    const idx = reviews.findIndex(r => r.id === responseDialog.reviewId);
-    if (idx !== -1) {
-      const updated = {
-        ...reviews[idx],
-        response: responseDialog.response,
-        responseDate: new Date().toISOString().split('T')[0],
-        status: 'Responded'
-      };
+ const handleSaveResponse = async () => {
+  const idx = reviews.findIndex(r => r.id === responseDialog.reviewId);
+  if (idx !== -1) {
+    const updated = {
+      ...reviews[idx], // Include ALL existing fields
+      response: responseDialog.response,
+      responseDate: new Date().toISOString().split('T')[0],
+      status: 'Responded'
+    };
+    
+    try {
       await updateReview(idx, updated);
+      setResponseDialog({ open: false, reviewId: '', response: '' });
+      console.log('Response saved successfully');
+    } catch (error) {
+      console.error('Error saving response:', error);
+      alert('Error saving response: ' + error.message);
     }
-    setResponseDialog({ open: false, reviewId: '', response: '' });
-  };
+  }
+};
+
 
   // Feedback handlers (local only)
   const handleFeedbackChange = (e) => {
@@ -262,6 +309,7 @@ const handleDeleteFeedback = async (idx) => {
   );
 };
 
+
 // Delete confirmation handlers
 const handleDeleteConfirm = (type, itemId, itemName, onConfirm) => {
   setDeleteConfirmDialog({
@@ -293,7 +341,38 @@ const handleDeleteConfirmExecute = async () => {
   }
   handleDeleteCancel();
 };
+const handleEditFeedback = (idx) => {
+  setEditFeedbackIdx(idx);
+  const feedback = farmerFeedback[idx];
+  setEditFeedbackForm({
+    id: feedback.id || '',
+    farmerName: feedback.farmerName || '',
+    farmerId: feedback.farmerId || '',
+    feedbackType: feedback.feedbackType || '',
+    rating: feedback.rating || 0,
+    message: feedback.message || '',
+    date: feedback.date || '',
+    priority: feedback.priority || 'Medium',
+    status: feedback.status || 'Open'
+  });
+};
 
+const handleEditFeedbackChange = (e) => {
+  setEditFeedbackForm({ ...editFeedbackForm, [e.target.name]: e.target.value });
+};
+
+const handleSaveEditFeedback = async () => {
+  if (editFeedbackIdx !== null) {
+    try {
+      await updateFarmerFeedback(editFeedbackForm.id, editFeedbackForm);
+      setEditFeedbackIdx(null);
+      console.log('Farmer feedback updated successfully');
+    } catch (error) {
+      console.error('Error updating farmer feedback:', error);
+      alert('Error updating farmer feedback: ' + error.message);
+    }
+  }
+};
 
 
   // Calculate statistics
@@ -325,6 +404,7 @@ const handleDeleteConfirmExecute = async () => {
         borderRadius: 0,
         p: 4,
         mb: 3,
+        mt: 2,
         background: `linear-gradient(135deg, ${
           ['#2196f3', '#4caf50'][tab]
         } 0%, ${
@@ -363,7 +443,7 @@ const handleDeleteConfirmExecute = async () => {
       {/* Container with proper padding and margins */}
       <Box sx={{ px: 3 }}>
         {/* Statistics Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid container spacing={2} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{
               p: 3,
@@ -374,7 +454,7 @@ const handleDeleteConfirmExecute = async () => {
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={2} width={205}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <StarIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -398,7 +478,7 @@ const handleDeleteConfirmExecute = async () => {
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={2} width={205}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <FeedbackIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -422,7 +502,7 @@ const handleDeleteConfirmExecute = async () => {
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={2} width={205}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <TrendingUpIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -446,7 +526,7 @@ const handleDeleteConfirmExecute = async () => {
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={2}  width={205}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <TrendingDownIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -463,11 +543,11 @@ const handleDeleteConfirmExecute = async () => {
         </Grid>
 
         {/* Charts Section */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid container spacing={3}  sx={{ mb: 4 }} >
           <Grid item xs={12} md={6}>
-            <Paper elevation={4} sx={{ p: 3, borderRadius: 3, height: 320 }}>
+            <Paper elevation={4} sx={{ p: 3, borderRadius: 3, height: 320, width: 520 }}>
               <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Rating Distribution</Typography>
-              <ResponsiveContainer width="100%" height="80%">
+              <ResponsiveContainer width="80%" height="80%" width={460}>
                 <BarChart data={ratingData}>
                   <XAxis dataKey="rating" />
                   <YAxis allowDecimals={false} />
@@ -482,7 +562,7 @@ const handleDeleteConfirmExecute = async () => {
             </Paper>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Paper elevation={4} sx={{ p: 3, borderRadius: 3, height: 320 }}>
+            <Paper elevation={4} sx={{ p: 3, borderRadius: 3, height: 320, width:500 }}>
               <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Review Categories</Typography>
               <ResponsiveContainer width="100%" height="80%">
                 <PieChart>
@@ -524,7 +604,7 @@ const handleDeleteConfirmExecute = async () => {
         {/* Customer Reviews Tab */}
         {tab === 0 && (
           <>
-            <Paper elevation={6} sx={{ p: 4, mb: 4, borderRadius: 3, background: isDark ? 'linear-gradient(135deg, rgba(33,150,243,0.1) 0%, rgba(33,150,243,0.05) 100%)' : 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)' }}>
+            <Paper elevation={6} sx={{ p: 4, mb: 4, borderRadius: 3, background: isDark ? 'linear-gradient(135deg, rgba(33,150,243,0.1) 0%, rgba(33,150,243,0.05) 100%)' : 'linear-gradient(135deg, #fcfcfcff 0%, #eef5fcff 100%)' }}>
               <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
                 <Avatar sx={{ bgcolor: '#2196f3', width: 48, height: 48 }}>📝</Avatar>
                 <Typography variant="h5" fontWeight="bold">Add Customer Review</Typography>
@@ -553,14 +633,14 @@ const handleDeleteConfirmExecute = async () => {
                     <TextField
                       fullWidth label="Category" name="category" value={reviewForm.category}
                       onChange={handleReviewChange} required select
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, width: '115px' }}
                     >
                       {REVIEW_CATEGORIES.map(cat => <MenuItem key={cat} value={cat}>{cat}</MenuItem>)}
                     </TextField>
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <Stack direction="row" alignItems="center" spacing={2}>
-                      <Typography variant="body1" sx={{ minWidth: 90 }}>Rating</Typography>
+                      <Typography variant="body1" sx={{ minWidth: 10 }}>Rating:</Typography>
                       <Rating
                         name="rating"
                         value={reviewForm.rating}
@@ -580,7 +660,7 @@ const handleDeleteConfirmExecute = async () => {
                     <TextField
                       fullWidth label="Comment" name="comment" value={reviewForm.comment}
                       onChange={handleReviewChange} required
-                      multiline rows={2}
+                      multiline rows={1}
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -661,7 +741,7 @@ const handleDeleteConfirmExecute = async () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" color="text.secondary">
-                          {review.date}
+                          {formatDate(review.date)}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -736,7 +816,7 @@ const handleDeleteConfirmExecute = async () => {
                     <TextField
                       fullWidth label="Feedback Type" name="feedbackType" value={feedbackForm.feedbackType}
                       onChange={handleFeedbackChange} required select
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 },width: '165px' }}
                     >
                       {FEEDBACK_TYPES.map(type => <MenuItem key={type} value={type}>{type}</MenuItem>)}
                     </TextField>
@@ -775,7 +855,7 @@ const handleDeleteConfirmExecute = async () => {
                     <TextField
                       fullWidth label="Message" name="message" value={feedbackForm.message}
                       onChange={handleFeedbackChange} required
-                      multiline rows={2}
+                      multiline rows={1}
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -868,10 +948,24 @@ const handleDeleteConfirmExecute = async () => {
                         } size="small" />
                       </TableCell>
                       <TableCell>
-                        <IconButton color="error" onClick={() => handleDeleteFeedback(idx)} sx={{ borderRadius: 2 }}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </TableCell>
+  <Stack direction="row" spacing={1}>
+    <IconButton 
+      color="primary" 
+      onClick={() => handleEditFeedback(idx)} 
+      sx={{ borderRadius: 2 }}
+    >
+      <EditIcon />
+    </IconButton>
+    <IconButton 
+      color="error" 
+      onClick={() => handleDeleteFeedback(idx)} 
+      sx={{ borderRadius: 2 }}
+    >
+      <DeleteIcon />
+    </IconButton>
+  </Stack>
+</TableCell>
+
                     </TableRow>
                   ))}
                   {farmerFeedback.length === 0 && !farmerFeedbackLoading && !farmerFeedbackError && (
@@ -899,7 +993,7 @@ const handleDeleteConfirmExecute = async () => {
               fullWidth
               label="Response"
               multiline
-              rows={3}
+              rows={1}
               value={responseDialog.response}
               onChange={e => setResponseDialog({ ...responseDialog, response: e.target.value })}
               placeholder="Write your response to the customer..."
@@ -986,7 +1080,7 @@ const handleDeleteConfirmExecute = async () => {
                   onChange={handleEditReviewChange}
                   required
                   multiline
-                  rows={2}
+                  rows={1}
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -1016,6 +1110,126 @@ const handleDeleteConfirmExecute = async () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Edit Farmer Feedback Dialog */}
+<Dialog 
+  open={editFeedbackIdx !== null} 
+  onClose={() => setEditFeedbackIdx(null)} 
+  maxWidth="md" 
+  fullWidth
+>
+  <DialogTitle>✏️ Edit Farmer Feedback</DialogTitle>
+  <DialogContent sx={{ pt: 3 }}>
+    <Grid container spacing={2} sx={{ mt: 2 }}>
+      <Grid item xs={12} md={6}>
+        <TextField
+          fullWidth
+          label="Farmer Name"
+          name="farmerName"
+          value={editFeedbackForm.farmerName}
+          onChange={handleEditFeedbackChange}
+          required
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+        />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          fullWidth
+          label="Farmer ID"
+          name="farmerId"
+          value={editFeedbackForm.farmerId}
+          onChange={handleEditFeedbackChange}
+          required
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+        />
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          fullWidth
+          label="Feedback Type"
+          name="feedbackType"
+          value={editFeedbackForm.feedbackType}
+          onChange={handleEditFeedbackChange}
+          required
+          select
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+        >
+          {FEEDBACK_TYPES.map(type => <MenuItem key={type} value={type}>{type}</MenuItem>)}
+        </TextField>
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          fullWidth
+          label="Priority"
+          name="priority"
+          value={editFeedbackForm.priority}
+          onChange={handleEditFeedbackChange}
+          required
+          select
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+        >
+          {PRIORITY_LEVELS.map(priority => <MenuItem key={priority} value={priority}>{priority}</MenuItem>)}
+        </TextField>
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <TextField
+          fullWidth
+          label="Status"
+          name="status"
+          value={editFeedbackForm.status}
+          onChange={handleEditFeedbackChange}
+          select
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+        >
+          {FEEDBACK_STATUS.map(status => <MenuItem key={status} value={status}>{status}</MenuItem>)}
+        </TextField>
+      </Grid>
+      <Grid item xs={12} md={6}>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Typography variant="body1" sx={{ minWidth: 90 }}>Satisfaction Rating</Typography>
+          <Rating
+            name="rating"
+            value={editFeedbackForm.rating}
+            onChange={(event, newValue) => 
+              setEditFeedbackForm({ ...editFeedbackForm, rating: newValue || 0 })
+            }
+            size="large"
+          />
+        </Stack>
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          fullWidth
+          multiline
+          rows={1}
+          label="Message"
+          name="message"
+          value={editFeedbackForm.message}
+          onChange={handleEditFeedbackChange}
+          required
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+        />
+      </Grid>
+    </Grid>
+  </DialogContent>
+  <DialogActions sx={{ p: 3 }}>
+    <Button 
+      onClick={() => setEditFeedbackIdx(null)} 
+      variant="outlined" 
+      sx={{ borderRadius: 2 }}
+    >
+      Cancel
+    </Button>
+    <Button 
+      onClick={handleSaveEditFeedback} 
+      variant="contained" 
+      sx={{ borderRadius: 2 }}
+    >
+      Save Changes
+    </Button>
+  </DialogActions>
+</Dialog>
+
         {/* Delete Confirmation Dialog */}
 <Dialog
   open={deleteConfirmDialog.open}

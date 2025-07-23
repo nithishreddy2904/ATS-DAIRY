@@ -613,7 +613,68 @@ export const certificationsAPI = {
     return api.get(`/certifications/expiring/${days}`);
   }
 };
+// / ✅ NEW: Audits API methods
+export const auditsAPI = {
+    getAll: () => {
+        console.log('🔄 Calling auditsAPI.getAll()');
+        return api.get('/audits');
+    },
+    getById: (id) => {
+        console.log('🔍 Calling auditsAPI.getById() with id:', id);
+        return api.get(`/audits/${id}`);
+    },
+    create: (data) => {
+        console.log('➕ Calling auditsAPI.create() with data:', data);
+        return api.post('/audits', data);
+    },
+    update: (id, data) => {
+        console.log('✏️ Calling auditsAPI.update() with id:', id, 'data:', data);
+        return api.put(`/audits/${id}`, data);
+    },
+    delete: (id) => {
+        console.log('🗑️ Calling auditsAPI.delete() with id:', id);
+        return api.delete(`/audits/${id}`);
+    },
+    getStats: () => {
+        console.log('📊 Calling auditsAPI.getStats()');
+        return api.get('/audits/stats');
+    }
+};
 
-
+// ✅ NEW: Documents API methods
+export const documentsAPI = {
+    getAll: () => {
+        console.log('🔄 Calling documentsAPI.getAll()');
+        return api.get('/documents');
+    },
+    getById: (id) => {
+        console.log('🔍 Calling documentsAPI.getById() with id:', id);
+        return api.get(`/documents/${id}`);
+    },
+    create: (data) => {
+        console.log('➕ Calling documentsAPI.create() with data:', data);
+        return api.post('/documents', data);
+    },
+    update: (id, data) => {
+        console.log('✏️ Calling documentsAPI.update() with id:', id, 'data:', data);
+        return api.put(`/documents/${id}`, data);
+    },
+    delete: (id) => {
+        console.log('🗑️ Calling documentsAPI.delete() with id:', id);
+        return api.delete(`/documents/${id}`);
+    },
+    getStats: () => {
+        console.log('📊 Calling documentsAPI.getStats()');
+        return api.get('/documents/stats');
+    },
+    getByCategory: (category) => {
+        console.log('🔍 Calling documentsAPI.getByCategory() with category:', category);
+        return api.get(`/documents/category/${category}`);
+    },
+    getByType: (type) => {
+        console.log('🔍 Calling documentsAPI.getByType() with type:', type);
+        return api.get(`/documents/type/${type}`);
+    }
+};
 
 export default api;

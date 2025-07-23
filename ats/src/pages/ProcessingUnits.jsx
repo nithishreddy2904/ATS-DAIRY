@@ -34,6 +34,22 @@ const QUALITY_RESULTS = ['Pass', 'Fail', 'Pending'];
 const MAINTENANCE_TYPES = ['Preventive', 'Corrective', 'Emergency', 'Scheduled'];
 const MAINTENANCE_STATUS = ['Scheduled', 'In Progress', 'Completed', 'Cancelled'];
 
+const formatDateTime = (timestamp) => {
+  if (!timestamp) return '';
+  
+  // Handle both ISO string and MySQL datetime formats
+  const date = new Date(timestamp);
+  
+  // Format as: Jun 09, 2025
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour12: false
+  }).split(',')[0]; // Remove time part, only show date
+};
+
+
 const ProcessingUnits = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
@@ -516,10 +532,10 @@ const handleSaveEditMaintenance = async () => {
   ];
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
-      {/* MODIFIED: Dynamic Header - now shows real-time processing efficiency from Dashboard */}
-      <Box sx={{
-        borderRadius: 0, p: 3, mb: 2,
+    <Box  sx={{ bgcolor: 'background.default', minHeight: '200vh' }}>
+      {/* MODIFIED: Dynamic Header */}
+      <Box height={150} sx={{
+        borderRadius: 0, p: 3, mb: 2,mt: 3,
         background: `linear-gradient(135deg, ${
           ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2'][tab]
         } 0%, ${
@@ -533,7 +549,7 @@ const handleSaveEditMaintenance = async () => {
           pointerEvents: 'none'
         }
       }}>
-        <Stack direction="row" alignItems="center" justifyContent="center" spacing={2} sx={{ position: 'relative', zIndex: 1 }}>
+        <Stack direction="row" alignItems="center" justifyContent="center" spacing={2}  sx={{ position: 'relative', zIndex: 1 }}>
           <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 64, height: 64 }}>
             {tabLabels[tab].icon}
           </Avatar>
@@ -549,10 +565,10 @@ const handleSaveEditMaintenance = async () => {
       </Box>
 
       {/* Statistics Cards */}
-      <Grid container spacing={4} sx={{ px: 16, mb: 3 }}>
+      <Grid container spacing={4} sx={{ px: 7, mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ p: 2, background: 'linear-gradient(135deg, #2196f3 0%, #21cbf3 100%)', color: 'white', borderRadius: 3 }}>
-            <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={2} width={180} height={100}>
               <FactoryIcon sx={{ fontSize: 40 }} />
               <Box>
                 <Typography variant="h4" fontWeight="bold">{activeUnits}</Typography>
@@ -563,7 +579,7 @@ const handleSaveEditMaintenance = async () => {
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ p: 2, background: 'linear-gradient(135deg, #4caf50 0%, #8bc34a 100%)', color: 'white', borderRadius: 3 }}>
-            <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={2} width={180} height={100}>
               <InventoryIcon sx={{ fontSize: 40 }} />
               <Box>
                 <Typography variant="h4" fontWeight="bold">{totalCapacity.toFixed(0)}L</Typography>
@@ -574,7 +590,7 @@ const handleSaveEditMaintenance = async () => {
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ p: 2, background: 'linear-gradient(135deg, #ff9800 0%, #ffc107 100%)', color: 'white', borderRadius: 3 }}>
-            <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={2} width={180} height={100}>
               <PrecisionManufacturingIcon sx={{ fontSize: 40 }} />
               <Box>
                 <Typography variant="h4" fontWeight="bold">{completedBatches}</Typography>
@@ -585,7 +601,7 @@ const handleSaveEditMaintenance = async () => {
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ p: 2, background: 'linear-gradient(135deg, #9c27b0 0%, #e91e63 100%)', color: 'white', borderRadius: 3 }}>
-            <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack direction="row" alignItems="center" spacing={2} width={180} height={100}>
               <QualityIcon sx={{ fontSize: 40 }} />
               <Box>
                 <Typography variant="h4" fontWeight="bold">{passedQuality}</Typography>
@@ -647,7 +663,7 @@ const handleSaveEditMaintenance = async () => {
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <TextField select fullWidth label="Type" name="type" value={unitForm.type} onChange={handleUnitChange} required
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}>
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, width: '100px' }}>
                       {UNIT_TYPES.map(type => <MenuItem key={type} value={type}>{type}</MenuItem>)}
                     </TextField>
                   </Grid>
@@ -722,7 +738,7 @@ const handleSaveEditMaintenance = async () => {
                 <Avatar sx={{ bgcolor: '#1976d2', mr: 2 }}>✏️</Avatar>Edit Processing Unit
               </DialogTitle>
               <DialogContent sx={{ pt: 3 }}>
-                <Grid container spacing={2}>
+                <Grid container spacing={2} sx={{ mt: 2 }}>
                   <Grid item xs={12} md={6}>
                     <TextField fullWidth label="Unit ID" name="id" value={editUnitForm.id} onChange={handleEditUnitChange} required
                       error={!!unitIdError} helperText={unitIdError || "Format: PU0001"} />
@@ -779,22 +795,22 @@ const handleSaveEditMaintenance = async () => {
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
                     <TextField fullWidth label="Batch ID" name="batchId" value={batchForm.batchId} onChange={handleBatchChange} required
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, width:'120px' }} />
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <TextField select fullWidth label="Processing Unit" name="unit" value={batchForm.unit} onChange={handleBatchChange} required>
+                    <TextField sx={{width:'160px'}} select fullWidth label="Processing Unit" name="unit" value={batchForm.unit} onChange={handleBatchChange} required>
                       {processingUnits.map(unit => <MenuItem key={unit.id} value={unit.unit_id}>{unit.name} ({unit.unit_id})</MenuItem>)}
                     </TextField>
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <TextField select fullWidth label="Product" name="product" value={batchForm.product} onChange={handleBatchChange} required
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}>
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 },width:'120px' }}>
                       {PRODUCT_TYPES.map(product => <MenuItem key={product} value={product}>{product}</MenuItem>)}
                     </TextField>
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <TextField fullWidth label="Quantity (L/Kg)" name="quantity" value={batchForm.quantity} onChange={handleBatchChange} required
-                      error={!!quantityError} helperText={quantityError} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
+                    <TextField  fullWidth label="Quantity (L/Kg)" name="quantity" value={batchForm.quantity} onChange={handleBatchChange} required
+                      error={!!quantityError} helperText={quantityError} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, width:'160px' }} />
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <TextField fullWidth label="Date" name="date" value={batchForm.date} onChange={handleBatchChange} type="date"
@@ -839,7 +855,7 @@ const handleSaveEditMaintenance = async () => {
                       <TableCell>{batch.unitName ? `${batch.unitName} (${batch.unit})` : batch.unit}</TableCell>
                       <TableCell><Chip label={batch.product} size="small" color="info" /></TableCell>
                       <TableCell><Typography fontWeight="bold" color="success.main">{batch.quantity}</Typography></TableCell>
-                      <TableCell>{batch.date}</TableCell>
+                      <TableCell>{formatDateTime(batch.date)}</TableCell>
                       <TableCell><Chip label={batch.status} color={batch.status === 'Completed' ? 'success' : batch.status === 'In Progress' ? 'warning' : 'info'} size="small" /></TableCell>
                       <TableCell>
                         <Stack direction="row" spacing={1}>
@@ -859,7 +875,7 @@ const handleSaveEditMaintenance = async () => {
                 <Avatar sx={{ bgcolor: '#388e3c', mr: 2 }}>✏️</Avatar>Edit Production Batch
               </DialogTitle>
               <DialogContent sx={{ pt: 3 }}>
-                <Grid container spacing={2}>
+                <Grid container spacing={2} sx={{ mt: 2 }}>
                   <Grid item xs={12} md={6}>
                     <TextField fullWidth label="Batch ID" name="batchId" value={editBatchForm.batchId} onChange={handleEditBatchChange} required />
                   </Grid>
@@ -908,13 +924,13 @@ const handleSaveEditMaintenance = async () => {
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
                     <TextField select fullWidth label="Batch ID" name="batchId" value={qualityForm.batchId} onChange={handleQualityChange} required
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}>
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, width:'120px'}}>
                       {productionBatches.map(batch => <MenuItem key={batch.batchId} value={batch.batchId}>{batch.batchId} - {batch.product}</MenuItem>)}
                     </TextField>
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <TextField select fullWidth label="Unit ID" name="unitId" value={qualityForm.unitId} onChange={handleQualityChange} required
-                      sx={{ '& .MuiOutlinedInputRoot': { borderRadius: 2 } }}>
+                      sx={{ '& .MuiOutlinedInputRoot': { borderRadius: 2 }, width:'100px' }}>
                       {processingUnits.map(unit => <MenuItem key={unit.id} value={unit.unit_id}>{unit.name} ({unit.unit_id})</MenuItem>)}
                     </TextField>
                   </Grid>
@@ -996,7 +1012,7 @@ const handleSaveEditMaintenance = async () => {
       <TableRow key={record.id}>
         <TableCell><Chip label={record.batch_id} color="primary" variant="outlined" /></TableCell>
         <TableCell>{record.unit_id}</TableCell>
-        <TableCell>{record.test_date}</TableCell>
+        <TableCell>{formatDateTime(record.test_date)}</TableCell>
         <TableCell>{record.fat}%</TableCell>
         <TableCell>{record.protein}%</TableCell>
         <TableCell>
@@ -1031,7 +1047,7 @@ const handleSaveEditMaintenance = async () => {
                 <Avatar sx={{ bgcolor: '#f57c00', mr: 2 }}>✏️</Avatar>Edit Quality Check
               </DialogTitle>
               <DialogContent sx={{ pt: 3 }}>
-                <Grid container spacing={2}>
+                <Grid container spacing={2} sx={{ mt: 2 }}>
                   <Grid item xs={12} md={6}>
                     <TextField select fullWidth label="Batch ID" name="batchId" value={editQualityForm.batchId} onChange={handleEditQualityChange} required>
                       {productionBatches.map(batch => <MenuItem key={batch.batchId} value={batch.batchId}>{batch.batchId} - {batch.product}</MenuItem>)}
@@ -1089,7 +1105,7 @@ const handleSaveEditMaintenance = async () => {
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
                     <TextField select fullWidth label="Processing Unit" name="unitId" value={maintenanceForm.unitId} onChange={handleMaintenanceChange} required
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}>
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 }, width:'160px' }}>
                       {processingUnits.map(unit => <MenuItem key={unit.id} value={unit.unit_id}>{unit.name} ({unit.unit_id})</MenuItem>)}
                     </TextField>
                   </Grid>
@@ -1119,7 +1135,7 @@ const handleSaveEditMaintenance = async () => {
                   </Grid>
                   <Grid item xs={12}>
                     <TextField fullWidth label="Description" name="description" value={maintenanceForm.description} onChange={handleMaintenanceChange} required
-                      multiline rows={3} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
+                      multiline rows={1} sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }} />
                   </Grid>
                   <Grid item xs={12}>
                     <Button type="submit" variant="contained" size="large" sx={{ borderRadius: 3, px: 4, py: 1.5 }}
@@ -1168,7 +1184,7 @@ const handleSaveEditMaintenance = async () => {
     maintenanceRecords.map((record) => (
       <TableRow key={record.id}>
         <TableCell>{record.unit_id}</TableCell>
-        <TableCell>{record.date}</TableCell>
+        <TableCell>{formatDateTime(record.date)}</TableCell>
         <TableCell><Chip label={record.type} size="small" color="info" /></TableCell>
         <TableCell>{record.description}</TableCell>
         <TableCell><Typography fontWeight="bold" color="success.main">₹{record.cost}</Typography></TableCell>
@@ -1204,7 +1220,7 @@ const handleSaveEditMaintenance = async () => {
                 <Avatar sx={{ bgcolor: '#7b1fa2', mr: 2 }}>✏️</Avatar>Edit Maintenance Record
               </DialogTitle>
               <DialogContent sx={{ pt: 3 }}>
-                <Grid container spacing={2}>
+                <Grid container spacing={2} sx={{ mt: 2 }}>
                   <Grid item xs={12} md={6}>
                     <TextField select fullWidth label="Processing Unit" name="unitId" value={editMaintenanceForm.unitId} onChange={handleEditMaintenanceChange} required>
                       {processingUnits.map(unit => <MenuItem key={unit.id} value={unit.unit_id}>{unit.name} ({unit.unit_id})</MenuItem>)}
@@ -1242,11 +1258,11 @@ const handleSaveEditMaintenance = async () => {
         )}
 
         {/* Charts Section */}
-        <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid container spacing={2} sx={{ mt: 2 }}>
           <Grid item xs={12} md={6}>
             <Paper elevation={6} sx={{ p: 3, borderRadius: 3, height: 300 }}>
               <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Unit Type Distribution</Typography>
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={220} width={485}>
                 <PieChart>
                   <Pie
                     data={unitTypeData}
@@ -1269,7 +1285,7 @@ const handleSaveEditMaintenance = async () => {
           <Grid item xs={12} md={6}>
             <Paper elevation={6} sx={{ p: 3, borderRadius: 3, height: 300 }}>
               <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>Production by Product Type</Typography>
-              <ResponsiveContainer width="100%" height={220}>
+              <ResponsiveContainer width="100%" height={220} width={485}>
                 <BarChart data={productionData}>
                   <XAxis dataKey="product" />
                   <YAxis />

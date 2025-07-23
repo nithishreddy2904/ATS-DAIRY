@@ -251,19 +251,7 @@ const FarmersSuppliers = () => {
     }
   };
 
-  // const handleDeleteFarmer = async (idx) => {
-  //   if (!farmers[idx] || !farmers[idx].id) {
-  //   alert('Farmer not found or already deleted.');
-  //   return;
-  // }
-  //   try {
-  //     await deleteFarmer(idx);
-  //     console.log('Farmer deleted successfully');
-  //   } catch (error) {
-  //     console.error('Error deleting farmer:', error);
-  //     alert('Error deleting farmer: ' + error.message);
-  //   }
-  // };
+  
     const handleDeleteFarmer = async (idx) => {
   // Show a confirmation dialog before deleting
   const confirmDelete = window.confirm('Are you sure you want to delete this farmer? This action cannot be undone.');
@@ -618,29 +606,21 @@ const FarmersSuppliers = () => {
             <Typography variant="h2" fontWeight="bold" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)', mb: 1 }}>
               {tabLabels[tab].label} Management
             </Typography>
-            <Typography variant="h5" sx={{ opacity: 0.9, fontWeight: 300 }}>
+            <Typography variant="h6" sx={{ opacity: 0.9, fontWeight: 300 }}>
               Manage your network of farmers and suppliers with join date tracking for dashboard analytics
             </Typography>
           </Box>
         </Stack>
       </Box>
 
-      {/* Show error if exists */}
-      {/* {error && (
-        <Box sx={{ px: 3, mb: 3 }}>
-          <Alert severity="warning">
-            Database connection issue: {error?.message || JSON.stringify(error)}. Using fallback data.
-          </Alert>
-        </Box>
-      )} */}
-
       {/* Container with uniform padding for equal left and right margins */}
       <Box sx={{ px: 3 }}>
         {/* Statistics Cards with uniform spacing */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid container spacing={2} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ 
               p: 3, 
+              width:'200px',
               background: 'linear-gradient(135deg, #2196f3 0%, #21cbf3 100%)',
               color: 'white',
               borderRadius: 3,
@@ -648,7 +628,7 @@ const FarmersSuppliers = () => {
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={2} width={250} height={100}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <PeopleIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -672,7 +652,7 @@ const FarmersSuppliers = () => {
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={2} width={210} height={100}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <LocalShippingIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -696,7 +676,7 @@ const FarmersSuppliers = () => {
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={2} width={210} height={100}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <Typography variant="h4" fontWeight="bold">🐄</Typography>
                 </Avatar>
@@ -722,7 +702,7 @@ const FarmersSuppliers = () => {
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={2} width={210} height={100}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <Typography variant="h4" fontWeight="bold">📈</Typography>
                 </Avatar>
@@ -815,7 +795,7 @@ const FarmersSuppliers = () => {
                       onChange={handleFarmerChange} required
                       error={!!farmerAddressError}
                       helperText={farmerAddressError || "Complete address (max 200 characters)"}
-                      multiline rows={2}
+                      multiline rows={1}
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -1052,7 +1032,7 @@ const FarmersSuppliers = () => {
                       onChange={handleSupplierChange} required
                       error={!!supplierAddressError}
                       helperText={supplierAddressError || "Complete address (max 200 characters)"}
-                      multiline rows={2}
+                      multiline rows={1}
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                     />
                   </Grid>
@@ -1185,7 +1165,7 @@ const FarmersSuppliers = () => {
             <Avatar sx={{ bgcolor: '#2196f3', mr: 2 }}>✏️</Avatar>Edit Farmer
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={2} sx={{ mt: 2 }}>
               <Grid item xs={12} md={6}>
                 <TextField 
                   fullWidth 
@@ -1333,7 +1313,7 @@ const FarmersSuppliers = () => {
             <Avatar sx={{ bgcolor: '#4caf50', mr: 2 }}>✏️</Avatar>Edit Supplier
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={2} sx={{ mt: 2 }}>
               <Grid item xs={12} md={6}>
                 <TextField 
                   fullWidth 

@@ -199,9 +199,9 @@ const MilkCollection = () => {
         </Stack>
       </Box>
 
-      <Box sx={{ px: 1 }}>
+      <Box sx={{ px: 1, }}>
         {/* Statistics Cards */}
-        <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid container spacing={2} sx={{ mb:4 }}>
           <Grid item xs={12} sm={6} md={3}>
             <Card sx={{ 
               p: 3, 
@@ -212,12 +212,12 @@ const MilkCollection = () => {
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2} width={210}>
+              <Stack direction="row" alignItems="center" spacing={2} width={210} height={80}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 46, height: 56 }}>
                   <OpacityIcon sx={{ fontSize: 28 }} />
                 </Avatar>
-                <Box>
-                  <Typography variant="h3" fontWeight="bold">{totalQuantity.toFixed(1)}L</Typography>
+                <Box >
+                  <Typography variant="h4" fontWeight="bold" >{totalQuantity.toFixed(1)}L</Typography>
                   <Typography variant="body1">Total Collected</Typography>
                   <Typography variant="caption" sx={{ opacity: 0.8 }}>
                     All time
@@ -236,12 +236,12 @@ const MilkCollection = () => {
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={2} width={210} height={80}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <ScienceIcon sx={{ fontSize: 28 }} />
                 </Avatar>
                 <Box>
-                  <Typography variant="h3" fontWeight="bold">{avgQuality.toFixed(1)}%</Typography>
+                  <Typography variant="h4" fontWeight="bold">{avgQuality.toFixed(1)}%</Typography>
                   <Typography variant="body1">Quality Grade A+/A</Typography>
                   <Typography variant="caption" sx={{ opacity: 0.8 }}>
                     Average quality
@@ -260,12 +260,12 @@ const MilkCollection = () => {
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={2} width={210} height={80}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56 }}>
                   <ThermostatIcon sx={{ fontSize: 28 }} />
                 </Avatar>
                 <Box>
-                  <Typography variant="h3" fontWeight="bold">{todayEntries}</Typography>
+                  <Typography variant="h4" fontWeight="bold">{todayEntries}</Typography>
                   <Typography variant="body1">Today's Collections</Typography>
                   <Typography variant="caption" sx={{ opacity: 0.8 }}>
                     {new Date().toLocaleDateString()}
@@ -284,12 +284,12 @@ const MilkCollection = () => {
               transition: 'transform 0.3s ease',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={2} width={210} height={80}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 46, height: 56 }}>
                   <PaymentIcon sx={{ fontSize: 28 }} />
                 </Avatar>
                 <Box>
-                  <Typography variant="h3" fontWeight="bold">₹{totalPayment.toLocaleString()}</Typography>
+                  <Typography variant="h4" fontWeight="bold">₹{totalPayment.toLocaleString()}</Typography>
                   <Typography variant="body1">Total Payments</Typography>
                   <Typography variant="caption" sx={{ opacity: 0.8 }}>
                     All transactions
@@ -326,6 +326,7 @@ const MilkCollection = () => {
                     onChange={handleFormChange}
                     required
                     sx={{
+                      width: '100px',
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: '#ffffff',
                         '&:hover': {
@@ -388,7 +389,7 @@ const MilkCollection = () => {
                 <FormControl fullWidth>
                   <InputLabel>Shift</InputLabel>
                   <Select 
-                    name="shift" 
+                    label="shift" name="shift" 
                     value={entryForm.shift} 
                     onChange={handleFormChange}
                     sx={{
@@ -412,7 +413,7 @@ const MilkCollection = () => {
                 <FormControl fullWidth>
                   <InputLabel>Quality Grade</InputLabel>
                   <Select 
-                    name="quality" 
+                    label="quality grade" name="quality" 
                     value={entryForm.quality} 
                     onChange={handleFormChange}
                     sx={{
@@ -594,7 +595,7 @@ const MilkCollection = () => {
                 <FormControl fullWidth>
                   <InputLabel>Payment Status</InputLabel>
                   <Select 
-                    name="paymentStatus" 
+                    label="paymentStatus" name="paymentStatus" 
                     value={entryForm.paymentStatus} 
                     onChange={handleFormChange}
                     sx={{
@@ -620,7 +621,7 @@ const MilkCollection = () => {
                 <TextField
                   fullWidth label="Remarks" name="remarks" value={entryForm.remarks}
                   onChange={handleFormChange}
-                  multiline rows={2}
+                  multiline rows={1}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       backgroundColor: '#ffffff',
@@ -787,7 +788,7 @@ const MilkCollection = () => {
             <Avatar sx={{ bgcolor: '#2196f3', mr: 2 }}>✏️</Avatar>Edit Milk Collection Record
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={2} sx={{ mt: 2 }}>
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth error={!!errors.farmerId}>
                   <InputLabel>Farmer</InputLabel>

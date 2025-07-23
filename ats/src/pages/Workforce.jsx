@@ -339,7 +339,7 @@ const avgSalary = employees && employees.length > 0
         <Grid item xs={12} sm={6} md={3}>
           <Card elevation={3} sx={{ borderRadius: 3, overflow: 'hidden', height: '100%' }}>
             <CardContent sx={{ textAlign: 'center', p: 3, height: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center',py: 2.5,width: 250, height: 210 }}>
-              <Avatar sx={{ bgcolor: '#2196F3', width: 64, height: 64, mx: 'auto', mb: 2 }}>
+              <Avatar sx={{ bgcolor: '#2196F3', width: 56, height: 56, mx: 'auto', mb: 1 }}>
                 <PersonIcon fontSize="large" />
               </Avatar>
               <Typography variant="h3" fontWeight="bold" color="primary">
@@ -364,7 +364,7 @@ const avgSalary = employees && employees.length > 0
         <Grid item xs={12} sm={6} md={3}>
           <Card elevation={3} sx={{ borderRadius: 3, overflow: 'hidden', height: '100%' }}>
             <CardContent sx={{ textAlign: 'center', p: 3, height: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center',py: 2.5,width: 250, height: 210 }}>
-              <Avatar sx={{ bgcolor: '#4CAF50', width: 64, height: 64, mx: 'auto', mb: 2 }}>
+              <Avatar sx={{ bgcolor: '#4CAF50', width: 56, height: 56, mx: 'auto', mb: 1 }}>
                 <Badge badgeContent={activeEmployees} color="success">
                   <WorkIcon fontSize="large" />
                 </Badge>
@@ -391,7 +391,7 @@ const avgSalary = employees && employees.length > 0
         <Grid item xs={12} sm={6} md={3}>
           <Card elevation={3} sx={{ borderRadius: 3, overflow: 'hidden', height: '100%' }}>
             <CardContent sx={{ textAlign: 'center', p: 3, height: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center',py: 2.5,width: 250, height: 210 }}>
-              <Avatar sx={{ bgcolor: '#FF9800', width: 64, height: 64, mx: 'auto', mb: 2 }}>
+              <Avatar sx={{ bgcolor: '#FF9800', width: 56, height: 56, mx: 'auto', mb: 1 }}>
                 <BusinessIcon fontSize="large" />
               </Avatar>
               <Typography variant="h3" fontWeight="bold" color="warning.main">
@@ -416,7 +416,7 @@ const avgSalary = employees && employees.length > 0
         <Grid item xs={12} sm={6} md={3}>
           <Card elevation={3} sx={{ borderRadius: 3, overflow: 'hidden', height: '100%' }}>
             <CardContent sx={{ textAlign: 'center', p: 3, height: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center',py: 2.5,width: 250, height: 210 }}>
-              <Avatar sx={{ bgcolor: '#9C27B0', width: 64, height: 64, mx: 'auto', mb: 2 }}>
+              <Avatar sx={{ bgcolor: '#9C27B0', width: 56, height: 56, mx: 'auto', mb: 1 }}>
                 <AttachMoneyIcon fontSize="large" />
               </Avatar>
               <Typography variant="h3" fontWeight="bold" color="secondary.main">
@@ -502,14 +502,14 @@ const avgSalary = employees && employees.length > 0
     <Grid container spacing={3}>
       {/* Basic Information */}
       <Grid item xs={12}>
-        <Typography variant="h6" fontWeight="bold" color="primary" sx={{ mb: 2 }}>
-          Basic Information
+        <Typography variant="h6" fontWeight="bold" color="primary" sx={{ mb: 1 }}>
+          Basic Information:
         </Typography>
-        <Divider />
       </Grid>
       
       <Grid item xs={12} sm={6} md={3}>
         <TextField
+        sx={{ width: '140px' }}
           fullWidth
           label="Employee ID"
           name="id"
@@ -524,6 +524,7 @@ const avgSalary = employees && employees.length > 0
       
       <Grid item xs={12} sm={6} md={3}>
         <TextField
+        sx={ { width: '130px' }}
           fullWidth
           label="Full Name"
           name="name"
@@ -538,6 +539,7 @@ const avgSalary = employees && employees.length > 0
       
       <Grid item xs={12} sm={6} md={3}>
         <TextField
+        sx={ { width: '150px' }}
           select
           fullWidth
           label="Department"
@@ -559,6 +561,7 @@ const avgSalary = employees && employees.length > 0
       
       <Grid item xs={12} sm={6} md={3}>
         <TextField
+          sx={ { width: '160px' }}
           fullWidth
           label="Position"
           name="position"
@@ -573,10 +576,9 @@ const avgSalary = employees && employees.length > 0
 
       {/* Contact Information */}
       <Grid item xs={12}>
-        <Typography variant="h6" fontWeight="bold" color="primary" sx={{ mb: 2, mt: 2 }}>
-          Contact Information
+        <Typography variant="h6" fontWeight="bold" color="primary" sx={{ mb: 1, mt: 0 }}>
+          Contact Information:
         </Typography>
-        <Divider />
       </Grid>
       
       <Grid item xs={12} sm={6} md={4}>
@@ -621,10 +623,9 @@ const avgSalary = employees && employees.length > 0
 
       {/* Employment Details */}
       <Grid item xs={12}>
-        <Typography variant="h6" fontWeight="bold" color="primary" sx={{ mb: 2, mt: 2 }}>
-          Employment Details
+        <Typography variant="h6" fontWeight="bold" color="primary" sx={{ mb: 1, mt: 0 }}>
+          Employment Details:
         </Typography>
-        <Divider />
       </Grid>
       
       <Grid item xs={12} sm={6} md={3}>
@@ -685,10 +686,9 @@ const avgSalary = employees && employees.length > 0
 
       {/* Additional Information */}
       <Grid item xs={12}>
-        <Typography variant="h6" fontWeight="bold" color="primary" sx={{ mb: 2, mt: 2 }}>
-          Additional Information
+        <Typography variant="h6" fontWeight="bold" color="primary" sx={{ mb: 1, mt: 0 }}>
+          Additional Information:
         </Typography>
-        <Divider />
       </Grid>
       
       <Grid item xs={12} sm={6} md={4}>
@@ -704,6 +704,7 @@ const avgSalary = employees && employees.length > 0
       
       <Grid item xs={12} sm={6} md={4}>
         <TextField
+        sx={{ width: '150px' }}
           select
           fullWidth
           label="Blood Group"
@@ -742,7 +743,7 @@ const avgSalary = employees && employees.length > 0
           label="Address"
           name="address"
           multiline
-          rows={2}
+          rows={1}
           value={employeeForm.address}
           onChange={(e) => handleFormChange(e)}
           size="small"

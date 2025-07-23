@@ -336,3 +336,46 @@ CREATE TABLE certifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+-- Create audits table
+CREATE TABLE audits (
+    id VARCHAR(10) PRIMARY KEY,
+    audit_type VARCHAR(100) NOT NULL,
+    auditor VARCHAR(100) NOT NULL,
+    audit_firm VARCHAR(100),
+    scheduled_date DATE NOT NULL,
+    completed_date DATE,
+    duration INT,
+    status ENUM('Scheduled', 'In Progress', 'Completed', 'Cancelled', 'Rescheduled') DEFAULT 'Scheduled',
+    findings TEXT,
+    corrective_actions TEXT,
+    score INT CHECK (score >= 0 AND score <= 100),
+    audit_scope VARCHAR(500),
+    audit_criteria VARCHAR(500),
+    non_conformities TEXT,
+    recommendations TEXT,
+    follow_up_date DATE,
+    cost DECIMAL(10,2),
+    report_path VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Create documents table
+CREATE TABLE documents (
+    id VARCHAR(10) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type ENUM('License', 'Certificate', 'Report', 'Policy', 'Procedure', 'Record', 'Manual') NOT NULL,
+    category ENUM('Quality Control', 'Environmental', 'Safety', 'Financial', 'Legal', 'Operational', 'Regulatory', 'Training', 'Emergency') NOT NULL,
+    upload_date DATE NOT NULL,
+    expiry_date DATE,
+    status ENUM('Active', 'Expired', 'Under Review') DEFAULT 'Active',
+    size VARCHAR(50),
+    version VARCHAR(20) DEFAULT '1.0',
+    uploaded_by VARCHAR(100) NOT NULL,
+    reviewed_by VARCHAR(100),
+    approved_by VARCHAR(100),
+    file_path VARCHAR(500),
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

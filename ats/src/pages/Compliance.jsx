@@ -47,11 +47,29 @@ const ComplianceCertification = () => {
   const isDark = theme.palette.mode === 'dark';
   const [tab, setTab] = useState(0);
 
+const formatDate = (value) => {
+  if (!value) return '';
+  // Handles both "2025-07-01T00:00:00.000Z" and "2025-07-01"
+  return value.split('T')[0];
+};
   // Get shared data from context
   const {
     audits,
     setAudits,
   } = useAppContext();
+  const {
+    auditsFromDB,
+    auditsLoading,
+    documentsFromDB,
+    documentsLoading,
+    addAuditToDB,
+    updateAuditInDB,
+    deleteAuditFromDB,
+    addDocumentToDB,
+    updateDocumentInDB,
+    deleteDocumentFromDB,
+} = useAppContext();
+
   const {
   complianceRecords,
   setComplianceRecords,
@@ -576,57 +594,50 @@ const handleDeleteCertification = async (idx) => {
     setAuditForm({ ...auditForm, [name]: value });
   };
 
-  const handleAddAudit = (e) => {
+  const handleAddAudit = async (e) => {
     e.preventDefault();
-    
     const errors = validateForm(auditForm, 'audit');
     if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
+        setFormErrors(errors);
+        return;
     }
 
-    const newAudit = {
-      ...auditForm,
-      id: `AUD${String(audits.length + 1).padStart(3, '0')}`
-    };
-    
-    setAudits([newAudit, ...audits]);
-    setAuditForm({
-      id: '',
-      auditType: '',
-      auditor: '',
-      auditFirm: '',
-      scheduledDate: '',
-      completedDate: '',
-      duration: '',
-      status: 'Scheduled',
-      findings: '',
-      correctiveActions: '',
-      score: 0,
-      auditScope: '',
-      auditCriteria: '',
-      nonConformities: '',
-      recommendations: '',
-      followUpDate: '',
-      cost: '',
-      reportPath: ''
-    });
-    setFormErrors({});
-  };
+    try {
+        const newAudit = {
+            ...auditForm,
+            id: `AUD${String(auditsFromDB.length + 1).padStart(3, '0')}`
+        };
+        await addAuditToDB(newAudit);
+        setAuditForm({
+            id: '', auditType: '', auditor: '', auditFirm: '', scheduledDate: '', completedDate: '',
+            duration: '', status: 'Scheduled', findings: '', correctiveActions: '', score: 0,
+            auditScope: '', auditCriteria: '', nonConformities: '', recommendations: '',
+            followUpDate: '', cost: '', reportPath: ''
+        });
+        setFormErrors({});
+    } catch (error) {
+        console.error('Error adding audit:', error);
+        alert('Error adding audit: ' + error.message);
+    }
+};
 
-  const handleDeleteAudit = (idx) => {
-  const confirmed = window.confirm(
-    'Are you sure you want to delete this audit record? This action cannot be undone.'
-  );
-  if (!confirmed) return;
+  const handleDeleteAudit = async (idx) => {
+    const confirmed = window.confirm('Are you sure you want to delete this audit record? This action cannot be undone.');
+    if (!confirmed) return;
 
-  setAudits(audits.filter((_, i) => i !== idx));
+    try {
+        const auditId = auditsFromDB[idx].id;
+        await deleteAuditFromDB(auditId);
+    } catch (error) {
+        console.error('Error deleting audit:', error);
+        alert('Error deleting audit: ' + error.message);
+    }
 };
 
 
   const handleEditAudit = (idx) => {
     setEditAuditIdx(idx);
-    setEditAuditForm(audits[idx]);
+    setEditAuditForm(auditsFromDB[idx]);
   };
 
   const handleEditAuditChange = (e) => {
@@ -634,14 +645,19 @@ const handleDeleteCertification = async (idx) => {
     setEditAuditForm({ ...editAuditForm, [name]: value });
   };
 
-  const handleSaveEditAudit = () => {
+  const handleSaveEditAudit = async () => {
     if (editAuditIdx !== null) {
-      const updated = [...audits];
-      updated[editAuditIdx] = editAuditForm;
-      setAudits(updated);
-      setEditAuditIdx(null);
+        try {
+            const auditId = auditsFromDB[editAuditIdx].id;
+            await updateAuditInDB(auditId, editAuditForm);
+            setEditAuditIdx(null);
+        } catch (error) {
+            console.error('Error updating audit:', error);
+            alert('Error updating audit: ' + error.message);
+        }
     }
-  };
+};
+
 
   // Enhanced Document handlers
   const handleDocumentChange = (e) => {
@@ -649,54 +665,51 @@ const handleDeleteCertification = async (idx) => {
     setDocumentForm({ ...documentForm, [name]: value });
   };
 
-  const handleAddDocument = (e) => {
+  const handleAddDocument = async (e) => {
     e.preventDefault();
-    
     const errors = validateForm(documentForm, 'document');
     if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
+        setFormErrors(errors);
+        return;
     }
 
-    const newDocument = {
-      ...documentForm,
-      id: `DOC${String(documents.length + 1).padStart(3, '0')}`,
-      uploadDate: new Date().toISOString().split('T')[0]
-    };
-    
-    setDocuments([newDocument, ...documents]);
-    setDocumentForm({
-      id: '',
-      name: '',
-      type: '',
-      category: '',
-      uploadDate: '',
-      expiryDate: '',
-      status: 'Active',
-      size: '',
-      version: '1.0',
-      uploadedBy: '',
-      reviewedBy: '',
-      approvedBy: '',
-      filePath: '',
-      description: ''
-    });
-    setFormErrors({});
-  };
-
-  const handleDeleteDocument = (idx) => {
-  const confirmed = window.confirm(
-    'Are you sure you want to delete this document? This action cannot be undone.'
-  );
-  if (!confirmed) return;
-
-  setDocuments(documents.filter((_, i) => i !== idx));
+    try {
+        const newDocument = {
+            ...documentForm,
+            id: `DOC${String(documentsFromDB.length + 1).padStart(3, '0')}`,
+            uploadDate: new Date().toISOString().split('T')[0]
+        };
+        await addDocumentToDB(newDocument);
+        setDocumentForm({
+            id: '', name: '', type: '', category: '', uploadDate: '', expiryDate: '',
+            status: 'Active', size: '', version: '1.0', uploadedBy: '', reviewedBy: '',
+            approvedBy: '', filePath: '', description: ''
+        });
+        setFormErrors({});
+    } catch (error) {
+        console.error('Error adding document:', error);
+        alert('Error adding document: ' + error.message);
+    }
 };
+
+  const handleDeleteDocument = async (idx) => {
+    const confirmed = window.confirm('Are you sure you want to delete this document? This action cannot be undone.');
+    if (!confirmed) return;
+
+    try {
+        const documentId = documentsFromDB[idx].id;
+        await deleteDocumentFromDB(documentId);
+    } catch (error) {
+        console.error('Error deleting document:', error);
+        alert('Error deleting document: ' + error.message);
+    }
+};
+
 
 
   const handleEditDocument = (idx) => {
     setEditDocumentIdx(idx);
-    setEditDocumentForm(documents[idx]);
+    setEditDocumentForm(documentsFromDB[idx]);
   };
 
   const handleEditDocumentChange = (e) => {
@@ -704,14 +717,18 @@ const handleDeleteCertification = async (idx) => {
     setEditDocumentForm({ ...editDocumentForm, [name]: value });
   };
 
-  const handleSaveEditDocument = () => {
+  const handleSaveEditDocument = async () => {
     if (editDocumentIdx !== null) {
-      const updated = [...documents];
-      updated[editDocumentIdx] = editDocumentForm;
-      setDocuments(updated);
-      setEditDocumentIdx(null);
+        try {
+            const documentId = documentsFromDB[editDocumentIdx].id;
+            await updateDocumentInDB(documentId, editDocumentForm);
+            setEditDocumentIdx(null);
+        } catch (error) {
+            console.error('Error updating document:', error);
+            alert('Error updating document: ' + error.message);
+        }
     }
-  };
+};
 
   // Calculate statistics
   const totalCompliance = complianceRecords.length;
@@ -837,6 +854,7 @@ const handleDeleteCertification = async (idx) => {
                   <FormControl fullWidth error={!!formErrors.type}>
                     <InputLabel>Compliance Type *</InputLabel>
                     <Select
+                    sx={{width: '170px'}}
                       name="type"
                       value={complianceForm.type}
                       onChange={handleComplianceChange}
@@ -866,7 +884,7 @@ const handleDeleteCertification = async (idx) => {
                   <TextField
                     fullWidth
                     multiline
-                    rows={3}
+                    rows={1}
                     name="description"
                     label="Description *"
                     value={complianceForm.description}
@@ -1047,7 +1065,7 @@ const handleDeleteCertification = async (idx) => {
                   <TextField
                     fullWidth
                     multiline
-                    rows={2}
+                    rows={1}
                     name="remarks"
                     label="Remarks"
                     value={complianceForm.remarks}
@@ -1072,7 +1090,7 @@ const handleDeleteCertification = async (idx) => {
 
           {/* Enhanced Compliance Records Table */}
           <Paper elevation={2} sx={{ borderRadius: 3 }}>
-            <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Box sx={{ p: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
                 <AssignmentIcon sx={{ mr: 1 }} />
                 Compliance Records (Affects Sustainability Index)
@@ -1108,7 +1126,7 @@ const handleDeleteCertification = async (idx) => {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{record.dueDate}</TableCell>
+                      <TableCell>{formatDate(record.dueDate)}</TableCell>
                       <TableCell>
                         <Chip 
                           label={record.status} 
@@ -1124,12 +1142,12 @@ const handleDeleteCertification = async (idx) => {
                         />
                       </TableCell>
                       <TableCell>{record.assignedTo}</TableCell>
-                      <TableCell>
-                        <IconButton onClick={() => handleEditCompliance(idx)} sx={{ borderRadius: 2 }}>
-                          <EditIcon />
+                      <TableCell sx={{ display: 'flex', gap: 1 }}>
+                        <IconButton onClick={() => handleEditCompliance(idx)} sx={{ borderRadius: 1 }}>
+                          <EditIcon sx={{ color: 'blue' }}/>
                         </IconButton>
                         <IconButton onClick={() => handleDeleteCompliance(idx)} sx={{ borderRadius: 2 }}>
-                          <DeleteIcon />
+                          <DeleteIcon sx={{ color: 'red' }} />
                         </IconButton>
                       </TableCell>
                     </TableRow>
@@ -1234,7 +1252,7 @@ const handleDeleteCertification = async (idx) => {
                   <TextField
                     fullWidth
                     multiline
-                    rows={2}
+                    rows={1}
                     name="scope"
                     label="Certification Scope"
                     value={certificationForm.scope}
@@ -1313,7 +1331,7 @@ const handleDeleteCertification = async (idx) => {
                   <TextField
                     fullWidth
                     multiline
-                    rows={2}
+                    rows={1}
                     name="benefits"
                     label="Benefits"
                     value={certificationForm.benefits}
@@ -1325,7 +1343,7 @@ const handleDeleteCertification = async (idx) => {
                   <TextField
                     fullWidth
                     multiline
-                    rows={2}
+                    rows={1}
                     name="maintenanceRequirements"
                     label="Maintenance Requirements"
                     value={certificationForm.maintenanceRequirements}
@@ -1390,8 +1408,8 @@ const handleDeleteCertification = async (idx) => {
                       <TableCell>{cert.issuingAuthority}</TableCell>
                       <TableCell>{cert.certificateNumber}</TableCell>
                       <TableCell>{cert.accreditationBody}</TableCell>
-                      <TableCell>{cert.issueDate}</TableCell>
-                      <TableCell>{cert.expiryDate}</TableCell>
+                      <TableCell>{formatDate(cert.issueDate)}</TableCell>
+                      <TableCell>{formatDate(cert.expiryDate)}</TableCell>
                       <TableCell>
                         <Chip 
                           label={cert.status} 
@@ -1400,12 +1418,12 @@ const handleDeleteCertification = async (idx) => {
                         />
                       </TableCell>
                       <TableCell>{cert.cost ? `₹${cert.cost}` : '-'}</TableCell>
-                      <TableCell>
+                      <TableCell sx={{ display: 'flex', gap: 1 }}>
                         <IconButton onClick={() => handleEditCertification(idx)} sx={{ borderRadius: 2 }}>
-                          <EditIcon />
+                          <EditIcon sx={{ color: 'blue' }}/>
                         </IconButton>
                         <IconButton onClick={() => handleDeleteCertification(idx)} sx={{ borderRadius: 2 }}>
-                          <DeleteIcon />
+                          <DeleteIcon sx={{ color: 'red' }} />
                         </IconButton>
                       </TableCell>
                     </TableRow>
@@ -1444,6 +1462,7 @@ const handleDeleteCertification = async (idx) => {
                   <FormControl fullWidth error={!!formErrors.auditType}>
                     <InputLabel>Audit Type *</InputLabel>
                     <Select
+                      sx={{width: '130px'}}
                       name="auditType"
                       value={auditForm.auditType}
                       onChange={handleAuditChange}
@@ -1494,7 +1513,7 @@ const handleDeleteCertification = async (idx) => {
                   <TextField
                     fullWidth
                     multiline
-                    rows={2}
+                    rows={1}
                     name="auditScope"
                     label="Audit Scope *"
                     value={auditForm.auditScope}
@@ -1508,7 +1527,7 @@ const handleDeleteCertification = async (idx) => {
                   <TextField
                     fullWidth
                     multiline
-                    rows={2}
+                    rows={1}
                     name="auditCriteria"
                     label="Audit Criteria"
                     value={auditForm.auditCriteria}
@@ -1607,7 +1626,7 @@ const handleDeleteCertification = async (idx) => {
                   <TextField
                     fullWidth
                     multiline
-                    rows={2}
+                    rows={1}
                     name="findings"
                     label="Findings"
                     value={auditForm.findings}
@@ -1619,7 +1638,7 @@ const handleDeleteCertification = async (idx) => {
                   <TextField
                     fullWidth
                     multiline
-                    rows={2}
+                    rows={1}
                     name="nonConformities"
                     label="Non-Conformities"
                     value={auditForm.nonConformities}
@@ -1631,7 +1650,7 @@ const handleDeleteCertification = async (idx) => {
                   <TextField
                     fullWidth
                     multiline
-                    rows={2}
+                    rows={1}
                     name="correctiveActions"
                     label="Corrective Actions"
                     value={auditForm.correctiveActions}
@@ -1643,7 +1662,7 @@ const handleDeleteCertification = async (idx) => {
                   <TextField
                     fullWidth
                     multiline
-                    rows={2}
+                    rows={1}
                     name="recommendations"
                     label="Recommendations"
                     value={auditForm.recommendations}
@@ -1690,12 +1709,12 @@ const handleDeleteCertification = async (idx) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {audits.map((audit, idx) => (
+                  {auditsFromDB.map((audit, idx) => (
                     <TableRow key={idx} hover>
                       <TableCell>{audit.auditType}</TableCell>
                       <TableCell>{audit.auditor}</TableCell>
                       <TableCell>{audit.auditFirm}</TableCell>
-                      <TableCell>{audit.scheduledDate}</TableCell>
+                      <TableCell>{formatDate(audit.scheduledDate)}</TableCell>
                       <TableCell>{audit.duration ? `${audit.duration} days` : '-'}</TableCell>
                       <TableCell>
                         <Chip 
@@ -1716,15 +1735,15 @@ const handleDeleteCertification = async (idx) => {
                       <TableCell>{audit.cost ? `₹${audit.cost}` : '-'}</TableCell>
                       <TableCell>
                         <IconButton onClick={() => handleEditAudit(idx)} sx={{ borderRadius: 2 }}>
-                          <EditIcon />
+                          <EditIcon sx={{ color: 'blue' }} />
                         </IconButton>
                         <IconButton onClick={() => handleDeleteAudit(idx)} sx={{ borderRadius: 2 }}>
-                          <DeleteIcon />
+                          <DeleteIcon sx={{ color: 'red' }} />
                         </IconButton>
                       </TableCell>
                     </TableRow>
                   ))}
-                  {audits.length === 0 && (
+                  {auditsFromDB.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={9} sx={{ textAlign: 'center', py: 4 }}>
                         <Typography variant="h6" color="text.secondary">
@@ -1770,6 +1789,7 @@ const handleDeleteCertification = async (idx) => {
                   <FormControl fullWidth error={!!formErrors.type}>
                     <InputLabel>Document Type *</InputLabel>
                     <Select
+                      sx={{width: '160px'}}
                       name="type"
                       value={documentForm.type}
                       onChange={handleDocumentChange}
@@ -1787,6 +1807,7 @@ const handleDeleteCertification = async (idx) => {
                   <FormControl fullWidth error={!!formErrors.category}>
                     <InputLabel>Category *</InputLabel>
                     <Select
+                      sx={{width: '130px'}}
                       name="category"
                       value={documentForm.category}
                       onChange={handleDocumentChange}
@@ -1802,6 +1823,7 @@ const handleDeleteCertification = async (idx) => {
 
                 <Grid item xs={12} md={6}>
                   <TextField
+                  sx={{width: '110px'}}
                     fullWidth
                     name="version"
                     label="Version"
@@ -1814,7 +1836,7 @@ const handleDeleteCertification = async (idx) => {
                   <TextField
                     fullWidth
                     multiline
-                    rows={2}
+                    rows={1}
                     name="description"
                     label="Description"
                     value={documentForm.description}
@@ -1853,6 +1875,17 @@ const handleDeleteCertification = async (idx) => {
                     onChange={handleDocumentChange}
                   />
                 </Grid>
+                <Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    label="Upload Date"
+    type="date"
+    name="uploadDate"
+    value={documentForm.uploadDate}
+    onChange={handleDocumentChange}
+    InputLabelProps={{ shrink: true }}
+  />
+</Grid>
 
                 <Grid item xs={12} md={6}>
                   <TextField
@@ -1942,14 +1975,14 @@ const handleDeleteCertification = async (idx) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {documents.map((doc, idx) => (
+                  {documentsFromDB.map((doc, idx) => (
                     <TableRow key={idx} hover>
                       <TableCell>{doc.name}</TableCell>
                       <TableCell>{doc.type}</TableCell>
                       <TableCell>{doc.category}</TableCell>
                       <TableCell>{doc.version}</TableCell>
-                      <TableCell>{doc.uploadDate}</TableCell>
-                      <TableCell>{doc.expiryDate || 'No expiry'}</TableCell>
+                      <TableCell>{formatDate(doc.uploadDate)}</TableCell>
+                      <TableCell>{formatDate(doc.expiryDate) || 'No expiry'}</TableCell>
                       <TableCell>{doc.size || '-'}</TableCell>
                       <TableCell>{doc.uploadedBy}</TableCell>
                       <TableCell>
@@ -1959,17 +1992,17 @@ const handleDeleteCertification = async (idx) => {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ display: 'flex', gap: 0.5 }}>
                         <IconButton onClick={() => handleEditDocument(idx)} sx={{ borderRadius: 2 }}>
-                          <EditIcon />
+                          <EditIcon  sx={{ color: 'blue' }}/>
                         </IconButton>
                         <IconButton onClick={() => handleDeleteDocument(idx)} sx={{ borderRadius: 2 }}>
-                          <DeleteIcon />
+                          <DeleteIcon sx={{ color: 'red' }} />
                         </IconButton>
                       </TableCell>
                     </TableRow>
                   ))}
-                  {documents.length === 0 && (
+                  {documentsFromDB.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={10} sx={{ textAlign: 'center', py: 4 }}>
                         <Typography variant="h6" color="text.secondary">
@@ -2032,7 +2065,7 @@ const handleDeleteCertification = async (idx) => {
               <TextField
                 fullWidth
                 multiline
-                rows={3}
+                rows={1}
                 name="description"
                 label="Description"
                 value={editComplianceForm.description}
@@ -2171,7 +2204,7 @@ const handleDeleteCertification = async (idx) => {
               <TextField
                 fullWidth
                 multiline
-                rows={2}
+                rows={1}
                 name="remarks"
                 label="Remarks"
                 value={editComplianceForm.remarks}
@@ -2334,7 +2367,7 @@ const handleDeleteCertification = async (idx) => {
               <TextField
                 fullWidth
                 multiline
-                rows={2}
+                rows={1}
                 name="scope"
                 label="Certification Scope"
                 value={editCertificationForm.scope}
@@ -2472,7 +2505,7 @@ const handleDeleteCertification = async (idx) => {
               <TextField
                 fullWidth
                 multiline
-                rows={2}
+                rows={1}
                 name="auditScope"
                 label="Audit Scope"
                 value={editAuditForm.auditScope}
@@ -2484,7 +2517,7 @@ const handleDeleteCertification = async (idx) => {
               <TextField
                 fullWidth
                 multiline
-                rows={2}
+                rows={1}
                 name="findings"
                 label="Findings"
                 value={editAuditForm.findings}
@@ -2496,7 +2529,7 @@ const handleDeleteCertification = async (idx) => {
               <TextField
                 fullWidth
                 multiline
-                rows={2}
+                rows={1}
                 name="correctiveActions"
                 label="Corrective Actions"
                 value={editAuditForm.correctiveActions}
@@ -2645,7 +2678,7 @@ const handleDeleteCertification = async (idx) => {
               <TextField
                 fullWidth
                 multiline
-                rows={2}
+                rows={1}
                 name="description"
                 label="Description"
                 value={editDocumentForm.description}

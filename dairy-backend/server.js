@@ -31,6 +31,8 @@ const announcementRoutes = require('./routes/announcements');
 const groupMessageRoutes = require('./routes/groupMessages');
 const complianceRecordRoutes = require('./routes/complianceRecords');
 const certificationRoutes = require('./routes/certifications');
+const auditRoutes = require('./routes/audits');
+const documentRoutes = require('./routes/documents');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -120,6 +122,8 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/group-messages', groupMessageRoutes);
 app.use('/api/compliance-records', complianceRecordRoutes);
 app.use('/api/certifications', certificationRoutes);
+app.use('/api/audits', auditRoutes);
+app.use('/api/documents', documentRoutes);
 // Optional: API root info
 app.get('/api', (req, res) => {
   res.json({

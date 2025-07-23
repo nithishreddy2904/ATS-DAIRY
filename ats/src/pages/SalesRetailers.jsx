@@ -25,6 +25,22 @@ const AMOUNT_REGEX = /^\d+$/;
 
 const COLORS = ['#6c63ff', '#4caf50', '#ff9800', '#f44336', '#9c27b0', '#00bcd4'];
 
+const formatDateTime = (timestamp) => {
+  if (!timestamp) return '';
+  
+  // Handle both ISO string and MySQL datetime formats
+  const date = new Date(timestamp);
+  
+  // Format as: Jun 09, 2025
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour12: false
+  }).split(',')[0]; // Remove time part, only show date
+};
+
+
 const SalesRetailers = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
@@ -419,7 +435,7 @@ const salesByRetailer = retailers
               alignItems: 'center',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%' }}>
+              <Stack direction="row" alignItems="center" width={200}  spacing={2} >
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56, flexShrink: 0 }}>
                   <StoreIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -450,7 +466,7 @@ const salesByRetailer = retailers
               alignItems: 'center',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%' }}>
+              <Stack direction="row" alignItems="center"  width={200} spacing={2} >
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56, flexShrink: 0 }}>
                   <AttachMoneyIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -481,7 +497,7 @@ const salesByRetailer = retailers
               alignItems: 'center',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%' }}>
+              <Stack direction="row" alignItems="center" spacing={2} width={200}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56, flexShrink: 0 }}>
                   <TrendingUpIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -512,7 +528,7 @@ const salesByRetailer = retailers
               alignItems: 'center',
               '&:hover': { transform: 'translateY(-4px)' }
             }}>
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%' }}>
+              <Stack direction="row" alignItems="center" spacing={2} width={200}>
                 <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)', width: 56, height: 56, flexShrink: 0 }}>
                   <EmojiEventsIcon sx={{ fontSize: 28 }} />
                 </Avatar>
@@ -786,7 +802,7 @@ const salesByRetailer = retailers
                     <TextField
                       select fullWidth label="Retailer" name="retailer" value={saleForm.retailer}
                       onChange={handleSaleChange} required
-                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                      sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 },width: '120px' }}
                     >
                       {retailers.map(retailer => (
                         <MenuItem key={retailer.name} value={retailer.name}>
@@ -834,15 +850,36 @@ const salesByRetailer = retailers
               Sales Records
             </Typography>
             <TableContainer component={Paper} sx={{ borderRadius: 3, overflow: 'hidden', boxShadow: theme.shadows[8] }}>
-              <Table>
+              <Table sx={{ width: '100%', tableLayout: 'fixed' }}>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: isDark ? 'rgba(76,175,80,0.2)' : '#e8f5e8' }}>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}align="center">Date</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}align="left">Retailer</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}align="right">Amount</TableCell>
-                    <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}align="center">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
+  <TableRow sx={{ bgcolor: isDark ? 'rgba(76,175,80,0.2)' : '#e8f5e8' }}>
+    <TableCell 
+      sx={{ fontWeight: 'bold', fontSize: '1rem', width: '25%' }}
+      align="center"
+    >
+      Date
+    </TableCell>
+    <TableCell 
+      sx={{ fontWeight: 'bold', fontSize: '1rem', width: '25%' }}
+      align="left"
+    >
+      Retailer
+    </TableCell>
+    <TableCell 
+      sx={{ fontWeight: 'bold', fontSize: '1rem', width: '25%' }}
+      align="right"
+    >
+      Amount
+    </TableCell>
+    <TableCell 
+      sx={{ fontWeight: 'bold', fontSize: '1rem', width: '25%' }}
+      align="center"
+    >
+      Actions
+    </TableCell>
+  </TableRow>
+</TableHead>
+
                   <TableBody>
   {salesLoading ? (
     <TableRow>
@@ -862,10 +899,10 @@ const salesByRetailer = retailers
   ) : (
     sales.map((sale, idx) => (
       <TableRow key={sale.id || `sale-${idx}`} hover>
-        <TableCell align="center" sx={{ fontFamily: 'monospace' }}>
-          {sale.date || 'N/A'}
+        <TableCell align="center" sx={{ fontFamily: 'monospace',width: '25%' }}>
+          {formatDateTime(sale.date) || 'N/A'}
         </TableCell>
-        <TableCell align="left">
+        <TableCell align="left" sx={{  width: '25%' }}>
           <Chip 
             label={sale.retailer || 'Unknown'} 
             size="small" 
@@ -873,12 +910,12 @@ const salesByRetailer = retailers
             sx={{ maxWidth: 180 }}
           />
         </TableCell>
-        <TableCell align="right">
+        <TableCell align="right" sx={{ width: '25%' }}>
           <Typography fontWeight="bold" color="success.main">
             ₹{Number(sale.amount || 0).toLocaleString()}
           </Typography>
         </TableCell>
-        <TableCell align="center">
+        <TableCell align="center" sx={{ width: '25%' }}>
           <Stack direction="row" spacing={1} justifyContent="center">
             <IconButton 
               color="primary" 
@@ -913,7 +950,7 @@ const salesByRetailer = retailers
             <Avatar sx={{ bgcolor: '#6c63ff', mr: 2 }}>✏️</Avatar>Edit Retailer
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={2} sx={{ mt: 2 }}>
               <Grid item xs={12}>
                 <TextField 
                   fullWidth label="Retailer Name" name="name" value={editRetailerForm.name} 
@@ -952,7 +989,7 @@ const salesByRetailer = retailers
             <Avatar sx={{ bgcolor: '#4caf50', mr: 2 }}>✏️</Avatar>Edit Sale
           </DialogTitle>
           <DialogContent sx={{ pt: 3 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={2} sx={{ mt: 2 }}>
               <Grid item xs={12}>
                 <TextField 
                   fullWidth label="Sale Date" name="date" value={editSaleForm.date} 
