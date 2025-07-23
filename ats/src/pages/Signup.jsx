@@ -8,14 +8,14 @@ import {
   PersonAdd as SignupIcon 
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';  // Using your existing context
 import { useTheme } from '@mui/material/styles';
 import atsLogo from '../assets/logo.png.png';
 
 const Signup = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { signup, loading } = useAuth();
+  const { signup, loading, isAuthenticated } = useAuth();  // Added isAuthenticated
   
   const [formData, setFormData] = useState({
     name: '',
@@ -30,6 +30,13 @@ const Signup = () => {
   const [displayedText, setDisplayedText] = useState('');
 
   const fullText = 'ASTROLITE TECH SOLUTION';
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     setMounted(true);
@@ -57,36 +64,75 @@ const Signup = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
-    setError('');
+    setError(''); // Clear error when user types
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  const validateForm = () => {
     if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
       setError('Please fill in all fields');
-      return;
+      return false;
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
+    if (formData.name.trim().length < 2) {
+      setError('Name must be at least 2 characters long');
+      return false;
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
     }
 
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return false;
+    }
+
+    // Password strength validation
+    const hasNumber = /\d/.test(formData.password);
+    const hasLetter = /[a-zA-Z]/.test(formData.password);
+    if (!hasNumber || !hasLetter) {
+      setError('Password must contain at least one letter and one number');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(''); // Clear any previous errors
+    
+    if (!validateForm()) {
       return;
     }
 
-    const success = await signup(formData.name, formData.email, formData.password);
-    
-    if (success) {
-      navigate('/dashboard');
-    } else {
-      setError('Failed to create account. Please try again.');
+    try {
+      const success = await signup(
+        formData.name.trim(), 
+        formData.email.trim(), 
+        formData.password
+      );
+      
+      if (success) {
+        navigate('/dashboard');
+      } else {
+        setError('Registration failed. This email may already be registered. Please try with a different email.');
+      }
+    } catch (err) {
+      setError('Registration failed. Please try again later.');
+      console.error('Signup error:', err);
     }
   };
 
+  
   return (
     <Box sx={{
       minHeight: '100vh',

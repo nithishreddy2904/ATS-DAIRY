@@ -5,14 +5,14 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff, Email, Lock, Login as LoginIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';  // Using your existing context
 import { useTheme } from '@mui/material/styles';
 import atsLogo from '../assets/logo.png.png';
 
 const Login = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { login, loading } = useAuth();
+  const { login, loading, isAuthenticated } = useAuth();  // Added isAuthenticated
   
   const [formData, setFormData] = useState({
     email: '',
@@ -24,6 +24,13 @@ const Login = () => {
   const [displayedText, setDisplayedText] = useState('');
 
   const fullText = 'ASTROLITE TECH SOLUTION';
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     setMounted(true);
@@ -51,25 +58,41 @@ const Login = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
-    setError('');
+    setError(''); // Clear error when user types
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(''); // Clear any previous errors
     
+    // Validation
     if (!formData.email || !formData.password) {
       setError('Please fill in all fields');
       return;
     }
 
-    const success = await login(formData.email, formData.password);
-    
-    if (success) {
-      navigate('/dashboard');
-    } else {
-      setError('Invalid email or password');
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    try {
+      const success = await login(formData.email.trim(), formData.password);
+      
+      if (success) {
+        navigate('/dashboard');
+      } else {
+        setError('Invalid email or password. Please check your credentials and try again.');
+      }
+    } catch (err) {
+      setError('Login failed. Please try again later.');
+      console.error('Login error:', err);
     }
   };
+
+  
 
   return (
     <Box sx={{

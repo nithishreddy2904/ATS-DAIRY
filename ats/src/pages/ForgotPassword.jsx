@@ -1,3 +1,4 @@
+// ats/src/pages/ForgotPassword.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Box, Paper, TextField, Button, Typography, Link, Alert,
@@ -5,28 +6,29 @@ import {
 } from '@mui/material';
 import { Email, Send, ArrowBack } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { useTheme } from '@mui/material/styles';
+import api from '../services/api';                 // ⬅️  NEW – shared Axios instance
 import atsLogo from '../assets/logo.png.png';
 
 const ForgotPassword = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const { resetPassword, loading } = useAuth();
-  
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [sent, setSent] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [displayedText, setDisplayedText] = useState('');
 
+  const [email, setEmail]     = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError]     = useState('');
+  const [sent, setSent]       = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Animation helpers
+  const [mounted, setMounted]       = useState(false);
+  const [displayedText, setDisplayedText] = useState('');
   const fullText = 'ASTROLITE TECH SOLUTION';
 
+  /* --------------------  Typewriter + mount effect  -------------------- */
   useEffect(() => {
     setMounted(true);
-    
-    // Typewriter effect with delay
+
     const startDelay = setTimeout(() => {
       let index = 0;
       const timer = setInterval(() => {
@@ -36,33 +38,51 @@ const ForgotPassword = () => {
         } else {
           clearInterval(timer);
         }
-      }, 100); // Typing speed
-
+      }, 100);
       return () => clearInterval(timer);
-    }, 1000); // Start after 1 second
+    }, 1_000);
 
     return () => clearTimeout(startDelay);
   }, []);
 
-  const handleSubmit = async (e) => {
+  /* -----------------------------  Submit  ------------------------------ */
+  const handleSubmit = async e => {
     e.preventDefault();
-    
-    if (!email) {
+    setError('');
+    setMessage('');
+
+    // Basic validation
+    if (!email.trim()) {
       setError('Please enter your email address');
       return;
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setError('Please enter a valid email address');
+      return;
+    }
 
-    const success = await resetPassword(email);
-    
-    if (success) {
+    setLoading(true);
+    try {
+      await api.post('/auth/forgot-password', { email: email.trim() });
+
       setSent(true);
-      setMessage('Password reset instructions have been sent to your email address.');
-      setError('');
-    } else {
-      setError('Failed to send reset email. Please try again.');
+      setMessage('Password reset instructions have been sent to your email.');
+    } catch (err) {
+      console.error('Forgot-password error:', err);
+      if (err.response?.status === 404) {
+        setError('No account found with this email.');
+      } else if (err.response?.status === 429) {
+        setError('Too many requests. Please try again later.');
+      } else {
+        setError('Failed to send reset email. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
+  /* ===========================  RENDER  =========================== */
   return (
     <Box sx={{
       minHeight: '100vh',
@@ -74,256 +94,187 @@ const ForgotPassword = () => {
       position: 'relative',
       overflow: 'hidden',
       '@keyframes float': {
-        '0%, 100%': { 
-          transform: 'translateY(0px)',
-        },
-        '50%': { 
-          transform: 'translateY(-20px)',
-        },
+        '0%,100%': { transform: 'translateY(0)' },
+        '50%':     { transform: 'translateY(-20px)' }
       },
-      '@keyframes slideInFromLeft': {
-        '0%': { transform: 'translateX(-100%)', opacity: 0 },
-        '100%': { transform: 'translateX(0)', opacity: 1 },
-      },
-      '@keyframes bounceIn': {
-        '0%': { transform: 'scale(0.3)', opacity: 0 },
-        '50%': { transform: 'scale(1.05)' },
-        '70%': { transform: 'scale(0.9)' },
-        '100%': { transform: 'scale(1)', opacity: 1 },
+      '@keyframes blink': {
+        '0%,50%':  { opacity: 1 },
+        '51%,100%':{ opacity: 0 }
       },
       '@keyframes fadeInUp': {
         '0%': { transform: 'translateY(30px)', opacity: 0 },
-        '100%': { transform: 'translateY(0)', opacity: 1 },
-      },
-      '@keyframes blink': {
-        '0%, 50%': { opacity: 1 },
-        '51%, 100%': { opacity: 0 },
-      },
+        '100%': { transform: 'translateY(0)', opacity: 1 }
+      }
     }}>
-      {/* Circular background in top left */}
+      {/* Floating circle */}
       <Box sx={{
         position: 'absolute',
-        top: '-50px',
-        left: '-50px',
-        width: '300px',
-        height: '300px',
-        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%)',
+        top: -50, left: -50,
+        width: 300, height: 300,
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.1) 100%)',
         borderRadius: '50%',
         animation: 'float 6s ease-in-out infinite',
-        zIndex: 0,
+        zIndex: 0
       }} />
 
-      {/* Typewriter text in top-left corner */}
-      <Box sx={{
-        position: 'absolute',
-        top: '15%',
-        left: '8%',
-        zIndex: 0,
-      }}>
+      {/* Typewriter heading */}
+      <Box sx={{ position: 'absolute', top: '15%', left: '8%', zIndex: 0 }}>
         <Typography sx={{
           fontSize: '3.5rem',
           fontWeight: 'bold',
-          color: 'rgba(255, 255, 255, 0.9)',
+          color: 'rgba(255,255,255,0.9)',
           textShadow: '0 2px 10px rgba(0,0,0,0.3)',
-          lineHeight: 1.2,
-          fontFamily: 'monospace',
-          letterSpacing: '0.05em',
-          overflow: 'hidden',
           whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          fontFamily: 'monospace',
           '&::after': {
             content: '"|"',
-            animation: 'blink 1s infinite',
-            color: 'rgba(255, 255, 255, 0.8)',
-            marginLeft: '2px',
+            ml: 0.5,
+            color: 'rgba(255,255,255,0.8)',
+            animation: 'blink 1s infinite'
           }
         }}>
           {displayedText}
         </Typography>
+
         <Typography sx={{
           fontSize: '1.2rem',
-          fontWeight: '300',
-          color: 'rgba(255, 255, 255, 0.7)',
-          animation: 'fadeInUp 2s ease-out 3s both',
-          marginTop: '1rem',
+          fontWeight: 300,
+          color: 'rgba(255,255,255,0.7)',
+          mt: 1,
+          animation: 'fadeInUp 2s ease-out 3s both'
         }}>
           Excellence in Technology
         </Typography>
       </Box>
 
-      <Fade in={mounted} timeout={1000}>
+      {/* Main card */}
+      <Fade in={mounted} timeout={1_000}>
         <Paper elevation={24} sx={{
-          p: 3,
-          maxWidth: 350,
-          width: '100%',
+          p: 3, mr: 8,
+          maxWidth: 350, width: '100%',
           borderRadius: 4,
-          background: theme.palette.mode === 'dark' 
-            ? 'rgba(30, 30, 30, 0.95)' 
-            : 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(20px)',
-          border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-          position: 'relative',
-          zIndex: 1,
-          animation: 'bounceIn 1s ease-out',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
-          mr: 8,
+          background: theme.palette.mode === 'dark'
+            ? 'rgba(30,30,30,0.95)'
+            : 'rgba(255,255,255,0.95)',
+          border: `1px solid ${theme.palette.mode === 'dark'
+            ? 'rgba(255,255,255,0.1)'
+            : 'rgba(0,0,0,0.1)'}`,
+          animation: 'fadeInUp 0.8s ease-out'
         }}>
           <Stack spacing={2.5} alignItems="center">
-            {/* Animated Logo */}
-            <Zoom in={mounted} timeout={1500}>
+
+            {/* Logo */}
+            <Zoom in={mounted} timeout={1_500}>
               <Box sx={{
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
+                width: 80, height: 80, borderRadius: '50%',
                 overflow: 'hidden',
-                border: '3px solid',
-                borderColor: 'primary.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                border: '3px solid', borderColor: 'primary.main',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 bgcolor: 'white',
                 boxShadow: theme.shadows[8],
-                transition: 'all 0.3s ease',
                 animation: 'float 3s ease-in-out infinite',
-                '&:hover': {
-                  transform: 'scale(1.1)',
-                  boxShadow: theme.shadows[16],
-                }
+                '&:hover': { transform: 'scale(1.1)', boxShadow: theme.shadows[16] }
               }}>
-                <img 
-                  src={atsLogo} 
-                  alt="ATS Tech Logo" 
-                  style={{ 
-                    width: '90%', 
-                    height: '90%', 
-                    objectFit: 'contain' 
-                  }} 
-                />
+                <img src={atsLogo} alt="ATS Logo"
+                     style={{ width: '90%', height: '90%', objectFit: 'contain' }} />
               </Box>
             </Zoom>
-            
-            {/* Animated Title */}
-            <Slide direction="down" in={mounted} timeout={1000}>
+
+            {/* Heading */}
+            <Slide direction="down" in={mounted} timeout={1_000}>
               <Box textAlign="center">
-                <Typography variant="h5" fontWeight="bold" color="primary" sx={{
-                  animation: 'fadeInUp 1s ease-out 0.5s both',
-                }}>
+                <Typography variant="h5" fontWeight="bold" color="primary"
+                            sx={{ animation: 'fadeInUp 1s ease-out 0.4s both' }}>
                   Reset Password
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{
-                  animation: 'fadeInUp 1s ease-out 0.7s both',
-                }}>
+                <Typography variant="body2" color="text.secondary"
+                            sx={{ animation: 'fadeInUp 1s ease-out 0.6s both' }}>
                   Enter your email to receive reset instructions
                 </Typography>
               </Box>
             </Slide>
 
-            {/* Success Message */}
+            {/* Success / error alerts */}
             {message && (
-              <Slide direction="up" in={!!message} timeout={500}>
-                <Alert severity="success" sx={{ 
-                  width: '100%', 
-                  borderRadius: 2,
-                  animation: 'slideInFromLeft 0.5s ease-out',
-                  fontSize: '0.85rem',
-                }}>
+              <Slide direction="up" in timeout={500}>
+                <Alert severity="success" sx={{ width: '100%', fontSize: '0.85rem' }}>
                   {message}
                 </Alert>
               </Slide>
             )}
 
-            {/* Error Alert */}
             {error && (
-              <Slide direction="up" in={!!error} timeout={500}>
-                <Alert severity="error" sx={{ 
-                  width: '100%', 
-                  borderRadius: 2,
-                  animation: 'slideInFromLeft 0.5s ease-out',
-                  fontSize: '0.85rem',
-                }}>
+              <Slide direction="up" in timeout={500}>
+                <Alert severity="error" sx={{ width: '100%', fontSize: '0.85rem' }}>
                   {error}
                 </Alert>
               </Slide>
             )}
 
+            {/* Form or CTA */}
             {!sent ? (
-              <>
-                {/* Reset Form */}
-                <Slide direction="up" in={mounted} timeout={1200}>
-                  <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-                    <Stack spacing={2.5}>
-                      <TextField
-                        fullWidth
-                        name="email"
-                        label="Email Address"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        size="small"
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <Email color="primary" sx={{ fontSize: '1.2rem' }} />
-                            </InputAdornment>
-                          ),
-                        }}
-                        sx={{ 
-                          '& .MuiOutlinedInput-root': { 
-                            borderRadius: 2,
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: theme.shadows[4],
-                            }
-                          },
-                          animation: 'fadeInUp 1s ease-out 0.9s both',
-                        }}
-                      />
-
-                      <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        size="medium"
-                        disabled={loading}
-                        startIcon={<Send />}
-                        sx={{
-                          borderRadius: 3,
-                          py: 1.2,
-                          background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
-                          transition: 'all 0.3s ease',
-                          animation: 'fadeInUp 1s ease-out 1.1s both',
+              <Slide direction="up" in={mounted} timeout={1_200}>
+                <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+                  <Stack spacing={2.5}>
+                    <TextField
+                      fullWidth
+                      label="Email Address"
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      size="small"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <Email color="primary" sx={{ fontSize: '1.2rem' }} />
+                          </InputAdornment>
+                        )
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          transition: 'all 0.3s',
                           '&:hover': {
-                            background: 'linear-gradient(45deg, #5a67d8 30%, #6b46c1 90%)',
-                            transform: 'translateY(-3px)',
-                            boxShadow: theme.shadows[12],
-                          },
-                          '&:active': {
-                            transform: 'translateY(-1px)',
+                            transform: 'translateY(-2px)',
+                            boxShadow: theme.shadows[4]
                           }
-                        }}
-                      >
-                        {loading ? 'Sending...' : 'Send Reset Instructions'}
-                      </Button>
-                    </Stack>
-                  </Box>
-                </Slide>
-              </>
+                        }
+                      }}
+                    />
+
+                    <Button
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      startIcon={<Send />}
+                      disabled={loading}
+                      sx={{
+                        borderRadius: 3, py: 1.2,
+                        background: 'linear-gradient(45deg,#667eea 30%,#764ba2 90%)',
+                        '&:hover': {
+                          background: 'linear-gradient(45deg,#5a67d8 30%,#6b46c1 90%)',
+                          transform: 'translateY(-3px)',
+                          boxShadow: theme.shadows[12]
+                        }
+                      }}
+                    >
+                      {loading ? 'Sending…' : 'Send Reset Instructions'}
+                    </Button>
+                  </Stack>
+                </Box>
+              </Slide>
             ) : (
-              <Slide direction="up" in={sent} timeout={1000}>
+              <Slide direction="up" in timeout={1_000}>
                 <Button
                   fullWidth
                   variant="outlined"
-                  size="medium"
-                  onClick={() => navigate('/login')}
                   startIcon={<ArrowBack />}
-                  sx={{ 
-                    borderRadius: 3, 
-                    py: 1.2,
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: theme.shadows[4],
-                    }
+                  onClick={() => navigate('/login')}
+                  sx={{
+                    borderRadius: 3, py: 1.2,
+                    '&:hover': { transform: 'translateY(-2px)', boxShadow: theme.shadows[4] }
                   }}
                 >
                   Back to Login
@@ -331,29 +282,19 @@ const ForgotPassword = () => {
               </Slide>
             )}
 
-            {/* Back to Login Link */}
+            {/* Back link if form still visible */}
             {!sent && (
-              <Slide direction="up" in={mounted} timeout={1400}>
+              <Slide direction="up" in timeout={1_400}>
                 <Link
                   component="button"
-                  variant="body2"
                   onClick={() => navigate('/login')}
-                  sx={{ 
-                    textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    transition: 'all 0.3s ease',
-                    animation: 'fadeInUp 1s ease-out 1.3s both',
+                  sx={{
+                    display: 'flex', alignItems: 'center', gap: 1,
                     fontSize: '0.85rem',
-                    '&:hover': {
-                      transform: 'scale(1.05)',
-                      color: 'primary.main',
-                    }
+                    '&:hover': { transform: 'scale(1.05)', color: 'primary.main' }
                   }}
                 >
-                  <ArrowBack fontSize="small" />
-                  Back to Login
+                  <ArrowBack fontSize="small" /> Back to Login
                 </Link>
               </Slide>
             )}

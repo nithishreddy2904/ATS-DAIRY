@@ -10,7 +10,69 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true
 });
+// REQUEST INTERCEPTOR  
+api.interceptors.request.use(cfg => {
+  const access = localStorage.getItem('access');   // short-lived token
+  if (access) cfg.headers.Authorization = `Bearer ${access}`;
+  return cfg;
+}, err => Promise.reject(err));
+
+//  RESPONSE INTERCEPTOR for 401 → refresh logic 
+
+let isRefreshing = false;
+let pendingQueue = [];
+
+function processQueue(error, token = null) {
+  pendingQueue.forEach(p => (error ? p.reject(error) : p.resolve(token)));
+  pendingQueue = [];
+}
+
+api.interceptors.response.use(
+  res => res,
+  async err => {
+    const { response, config } = err;
+    if (response?.status !== 401 || config.__retry) {
+      // Any error that is NOT 401 or already retried → bubble up
+      return Promise.reject(err);
+    }
+
+    // Mark original request so we don’t enter an infinite loop
+    config.__retry = true;
+
+    if (isRefreshing) {
+      // If a refresh in flight, queue the request until it resolves
+      return new Promise((resolve, reject) => {
+        pendingQueue.push({
+          resolve: token => {
+            config.headers.Authorization = `Bearer ${token}`;
+            resolve(api(config));
+          },
+          reject
+        });
+      });
+    }
+
+    isRefreshing = true;
+    try {
+      const { data } = await api.post('/auth/refresh');        // <- cookie based
+      localStorage.setItem('access', data.accessToken);
+      processQueue(null, data.accessToken);
+      config.headers.Authorization = `Bearer ${data.accessToken}`;
+      return api(config);                                      // retry original
+    } catch (refreshErr) {
+      processQueue(refreshErr, null);
+      // Optional: clear storage & redirect to login
+      localStorage.clear();
+      window.location.href = '/login';
+      return Promise.reject(refreshErr);
+    } finally {
+      isRefreshing = false;
+    }
+  }
+);
+
 
 // Response interceptor
 api.interceptors.response.use(
@@ -675,6 +737,12 @@ export const documentsAPI = {
         console.log('🔍 Calling documentsAPI.getByType() with type:', type);
         return api.get(`/documents/type/${type}`);
     }
+};
+//  HANDY AUTH HELPERS 
+export const authApi = {
+  login: (email, password) => api.post('/auth/login', { email, password }),
+  register: (name, email, password) => api.post('/auth/register', { name, email, password }),
+  logout: () => api.post('/auth/logout')
 };
 
 export default api;

@@ -9,6 +9,7 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'dairy_management',
   waitForConnections: true,
   connectionLimit: 10,
+  connectTimeout: 10_000, 
   queueLimit: 0,
   // REMOVED: acquireTimeout, timeout, reconnect (these are invalid in mysql2)
   // Use these instead:
